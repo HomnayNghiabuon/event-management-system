@@ -1,556 +1,965 @@
-# Tài liệu API – Hệ thống Quản lý Sự kiện
+# API Documentation – Event Management System
 
-**Base URL:** `http://localhost:8080/api`
-**Xác thực:** JWT Bearer Token – đính kèm header `Authorization: Bearer <token>` cho các endpoint yêu cầu đăng nhập
-
----
-
-## Mục lục
-
-1. [Xác thực](#1-xác-thực)
-2. [Sự kiện – dành cho người tham dự](#2-sự-kiện--dành-cho-người-tham-dự)
-3. [Mua vé & Thanh toán](#3-mua-vé--thanh-toán)
-4. [E-ticket & Check-in](#4-e-ticket--check-in)
-5. [Organizer – Quản lý sự kiện](#5-organizer--quản-lý-sự-kiện)
-6. [Admin](#6-admin)
+**Stack:** Spring Boot (REST API) + React (Frontend)  
+**Base URL:** `http://localhost:8080/api/v1`  
+**Authentication:** Bearer Token (JWT)
 
 ---
 
-## 1. Xác thực
+## Table of Contents
 
-### Đăng ký tài khoản
+1. [Authentication](#1-authentication)
+2. [Events (Sự kiện)](#2-events)
+3. [Ticket Reservation (Giữ chỗ)](#3-ticket-reservation)
+4. [Tickets (Vé)](#4-tickets)
+5. [Attendee – Người tham dự](#5-attendee)
+6. [Organizer](#6-organizer)
+7. [Admin](#7-admin)
+8. [Notifications (Thông báo)](#8-notifications)
+9. [Error Codes](#9-error-codes)
+
+---
+
+## 1. Authentication
+
+### 1.1 Register
+
 ```
 POST /auth/register
 ```
-**Body:**
+
+**Request Body:**
 ```json
 {
-  "hoTen": "Nguyễn Văn A",
-  "email": "nguyenvana@gmail.com",
-  "matKhau": "Abc@1234",
-  "vaiTro": "ATTENDEE"
+  "fullName": "Nguyen Van A",
+  "email": "user@example.com",
+  "password": "string",
+  "role": "ATTENDEE | ORGANIZER"
 }
 ```
-> `vaiTro` nhận một trong ba giá trị: `ATTENDEE`, `ORGANIZER`, `ADMIN`
 
-**Response 201:**
+**Response `201 Created`:**
 ```json
 {
-  "id": 1,
-  "hoTen": "Nguyễn Văn A",
-  "email": "nguyenvana@gmail.com",
-  "vaiTro": "ATTENDEE"
+  "userId": "uuid",
+  "email": "user@example.com",
+  "role": "ATTENDEE",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 ---
 
-### Đăng nhập
+### 1.2 Login
+
 ```
 POST /auth/login
 ```
-**Body:**
+
+**Request Body:**
 ```json
 {
-  "email": "nguyenvana@gmail.com",
-  "matKhau": "Abc@1234"
+  "email": "user@example.com",
+  "password": "string"
 }
 ```
-**Response 200:**
+
+**Response `200 OK`:**
 ```json
 {
-  "accessToken": "eyJhbGci...",
-  "refreshToken": "dGhpcyBp...",
-  "loaiToken": "Bearer",
-  "thoiHanMs": 86400000
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "user": {
+    "userId": "uuid",
+    "fullName": "Nguyen Van A",
+    "email": "user@example.com",
+    "role": "ATTENDEE"
+  }
 }
 ```
 
 ---
 
-### Làm mới token
+### 1.3 Refresh Token
+
 ```
 POST /auth/refresh-token
 ```
-**Body:**
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response `200 OK`:**
 ```json
 {
-  "refreshToken": "dGhpcyBp..."
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 86400
 }
 ```
-**Response 200:** trả về `accessToken` mới
 
 ---
 
-### Đăng xuất
-```
-POST /auth/logout
-```
-*Yêu cầu đăng nhập.* Server sẽ vô hiệu hoá refresh token hiện tại.
+## 2. Events
 
----
+### 2.1 Search / Filter Events
 
-## 2. Sự kiện – dành cho người tham dự
+> **Role:** PUBLIC (no auth required)
 
-### Tìm kiếm sự kiện
 ```
 GET /events
 ```
-**Query params:**
 
-| Tham số | Kiểu | Mô tả |
-|---|---|---|
-| `tuKhoa` | string | Tìm theo tên sự kiện |
-| `danhMucId` | number | Lọc theo danh mục |
-| `diaDiem` | string | Lọc theo địa điểm (tỉnh/thành) |
-| `tuNgay` | date | Từ ngày (`yyyy-MM-dd`) |
-| `denNgay` | date | Đến ngày (`yyyy-MM-dd`) |
-| `trang` | number | Số trang, mặc định `0` |
-| `kichThuoc` | number | Số bản ghi/trang, mặc định `12` |
+**Query Parameters:**
 
-**Response 200:**
+| Parameter  | Type     | Required | Description                         |
+|------------|----------|----------|-------------------------------------|
+| `category` | `string` | No       | Category slug (e.g. `music`, `tech`)|
+| `location` | `string` | No       | City or venue name                  |
+| `date`     | `string` | No       | ISO date `YYYY-MM-DD`               |
+| `page`     | `int`    | No       | Page number, default `0`            |
+| `size`     | `int`    | No       | Page size, default `10`             |
+| `sort`     | `string` | No       | `date`, `price`, `name`             |
+
+**Response `200 OK`:**
 ```json
 {
-  "tongSo": 48,
-  "trang": 0,
-  "danhSach": [
+  "content": [
     {
-      "id": 10,
-      "tenSuKien": "Hội thảo Công nghệ 2026",
-      "danhMuc": "Công nghệ",
-      "diaDiem": "Hà Nội",
-      "ngayToChuc": "2026-04-15",
-      "giaTuKhoang": 150000,
-      "anhDaiDien": "https://...",
-      "trangThai": "DANG_MO_BAN"
-    }
-  ]
-}
-```
-
----
-
-### Xem chi tiết sự kiện
-```
-GET /events/{id}
-```
-**Response 200:**
-```json
-{
-  "id": 10,
-  "tenSuKien": "Hội thảo Công nghệ 2026",
-  "moTa": "Sự kiện thường niên quy tụ các chuyên gia...",
-  "diaDiem": "Trung tâm Hội nghị Quốc gia, Hà Nội",
-  "ngayToChuc": "2026-04-15T08:00:00",
-  "ngayKetThuc": "2026-04-15T17:00:00",
-  "danhMuc": "Công nghệ",
-  "organizer": {
-    "id": 3,
-    "tenToChuc": "Tech Community VN"
-  },
-  "loaiVe": [
-    {
-      "id": 1,
-      "tenLoai": "Vé thường",
-      "gia": 150000,
-      "soLuongConLai": 200
-    },
-    {
-      "id": 2,
-      "tenLoai": "Vé VIP",
-      "gia": 500000,
-      "soLuongConLai": 30
-    }
-  ]
-}
-```
-
----
-
-### Lịch sự kiện đã đăng ký
-```
-GET /users/me/su-kien
-```
-*Yêu cầu đăng nhập (ATTENDEE)*
-
-**Response 200:**
-```json
-[
-  {
-    "donHangId": 55,
-    "tenSuKien": "Workshop UI/UX cơ bản",
-    "ngayToChuc": "2026-03-20T09:00:00",
-    "diaDiem": "TP. Hồ Chí Minh",
-    "trangThaiDonHang": "DA_THANH_TOAN",
-    "soVe": 2
-  }
-]
-```
-
----
-
-## 3. Mua vé & Thanh toán
-
-### Tạo đơn hàng
-```
-POST /orders
-```
-*Yêu cầu đăng nhập (ATTENDEE)*
-
-**Body:**
-```json
-{
-  "suKienId": 10,
-  "chiTiet": [
-    { "loaiVeId": 1, "soLuong": 2 },
-    { "loaiVeId": 2, "soLuong": 1 }
-  ]
-}
-```
-**Response 201:**
-```json
-{
-  "donHangId": 55,
-  "tongTien": 800000,
-  "trangThai": "CHO_THANH_TOAN",
-  "thoiHanThanhToan": "2026-03-08T15:30:00"
-}
-```
-
----
-
-### Thanh toán đơn hàng
-```
-POST /orders/{donHangId}/thanh-toan
-```
-*Yêu cầu đăng nhập (ATTENDEE)*
-
-**Body:**
-```json
-{
-  "phuongThuc": "VNPAY"
-}
-```
-> `phuongThuc` hỗ trợ: `VNPAY`, `MOMO`, `ZALOPAY`
-
-**Response 200:**
-```json
-{
-  "urlThanhToan": "https://sandbox.vnpayment.vn/...",
-  "maGiaoDich": "TXN20260308001"
-}
-```
-
----
-
-### Callback thanh toán (webhook)
-```
-POST /orders/callback
-```
-Endpoint nhận kết quả từ cổng thanh toán. Hệ thống tự xử lý, không cần gọi từ client.
-
----
-
-## 4. E-ticket & Check-in
-
-### Lấy e-ticket (QR Code)
-```
-GET /orders/{donHangId}/tickets
-```
-*Yêu cầu đăng nhập (ATTENDEE)*
-
-**Response 200:**
-```json
-[
-  {
-    "ticketId": "TK-20260308-001",
-    "tenNguoiTham": "Nguyễn Văn A",
-    "loaiVe": "Vé VIP",
-    "qrCode": "data:image/png;base64,iVBORw0KGgo...",
-    "trangThai": "CHUA_CHECK_IN"
-  }
-]
-```
-> `qrCode` là ảnh PNG encode base64, frontend render trực tiếp vào thẻ `<img>`.
-
----
-
-### Check-in bằng QR Code
-```
-POST /checkin
-```
-*Yêu cầu đăng nhập (ORGANIZER)*
-
-**Body:**
-```json
-{
-  "maQR": "TK-20260308-001"
-}
-```
-**Response 200:**
-```json
-{
-  "thanhCong": true,
-  "tenNguoiTham": "Nguyễn Văn A",
-  "loaiVe": "Vé VIP",
-  "thoiGianCheckIn": "2026-04-15T08:35:00"
-}
-```
-**Response 400** (đã check-in rồi):
-```json
-{
-  "loi": "Vé này đã được sử dụng lúc 08:20:00"
-}
-```
-
----
-
-## 5. Organizer – Quản lý sự kiện
-
-> Tất cả endpoint trong mục này yêu cầu đăng nhập với vai trò `ORGANIZER`.
-
-### Tạo sự kiện
-```
-POST /organizer/events
-```
-**Body:**
-```json
-{
-  "tenSuKien": "Workshop Thiết kế UI/UX 2026",
-  "moTa": "Khoá học thực hành dành cho designer...",
-  "danhMucId": 2,
-  "diaDiem": "268 Lý Thường Kiệt, Q.10, TP.HCM",
-  "ngayToChuc": "2026-05-10T08:30:00",
-  "ngayKetThuc": "2026-05-10T17:00:00",
-  "loaiVe": [
-    { "tenLoai": "Early Bird", "gia": 200000, "soLuong": 50 },
-    { "tenLoai": "Vé thường", "gia": 350000, "soLuong": 150 }
-  ]
-}
-```
-**Response 201:** trả về toàn bộ thông tin sự kiện vừa tạo, `trangThai: "CHO_DUYET"`.
-
----
-
-### Publish / Unpublish sự kiện
-```
-PATCH /organizer/events/{id}/trang-thai
-```
-**Body:**
-```json
-{
-  "trangThai": "DANG_MO_BAN"
-}
-```
-> `trangThai` hợp lệ: `DANG_MO_BAN`, `TAM_DUNG`, `HUY`
-> Chỉ sự kiện đã được admin duyệt mới có thể chuyển sang `DANG_MO_BAN`.
-
----
-
-### Danh sách người đăng ký
-```
-GET /organizer/events/{id}/dang-ky
-```
-**Query params:** `trang`, `kichThuoc`, `trangThaiVe` (`CHUA_CHECK_IN` | `DA_CHECK_IN`)
-
-**Response 200:**
-```json
-{
-  "tongSo": 320,
-  "danhSach": [
-    {
-      "ticketId": "TK-20260308-001",
-      "hoTen": "Trần Thị B",
-      "email": "tranthib@gmail.com",
-      "loaiVe": "Early Bird",
-      "ngayMua": "2026-03-01T10:15:00",
-      "trangThai": "CHUA_CHECK_IN"
-    }
-  ]
-}
-```
-
----
-
-### Gửi email thông báo
-```
-POST /organizer/events/{id}/thong-bao
-```
-**Body:**
-```json
-{
-  "tieuDe": "Nhắc nhở: Sự kiện diễn ra vào ngày mai!",
-  "noiDung": "Xin chào, sự kiện Workshop UI/UX sẽ bắt đầu lúc 8h30 ngày mai...",
-  "guiDen": "TAT_CA"
-}
-```
-> `guiDen` nhận: `TAT_CA`, `CHUA_CHECK_IN`, `DA_CHECK_IN`
-
-**Response 200:**
-```json
-{
-  "soEmailDaGui": 318,
-  "trangThai": "DANG_GUI"
-}
-```
-> Email được gửi bất đồng bộ qua queue, frontend có thể polling trạng thái nếu cần.
-
----
-
-### Báo cáo bán vé
-```
-GET /organizer/events/{id}/bao-cao
-```
-**Response 200:**
-```json
-{
-  "tongDoanhThu": 78500000,
-  "tongVeDaBan": 318,
-  "tongVeConLai": 32,
-  "theoPhanLoai": [
-    {
-      "loaiVe": "Early Bird",
-      "daBan": 50,
-      "conLai": 0,
-      "doanhThu": 10000000
-    },
-    {
-      "loaiVe": "Vé thường",
-      "daBan": 268,
-      "conLai": 32,
-      "doanhThu": 68500000
+      "eventId": "uuid",
+      "title": "Tech Conference 2025",
+      "category": "Technology",
+      "location": "Hanoi",
+      "startDate": "2025-06-15T09:00:00",
+      "endDate": "2025-06-15T18:00:00",
+      "thumbnailUrl": "https://cdn.example.com/events/img.jpg",
+      "minPrice": 100000,
+      "status": "PUBLISHED"
     }
   ],
-  "bienDongTheoNgay": [
-    { "ngay": "2026-03-01", "soBan": 45 },
-    { "ngay": "2026-03-02", "soBan": 30 }
+  "totalElements": 50,
+  "totalPages": 5,
+  "size": 10,
+  "number": 0
+}
+```
+
+---
+
+### 2.2 Get Event Detail
+
+> **Role:** PUBLIC
+
+```
+GET /events/{eventId}
+```
+
+**Path Variables:**
+
+| Variable  | Type   | Description |
+|-----------|--------|-------------|
+| `eventId` | `uuid` | Event ID    |
+
+**Response `200 OK`:**
+```json
+{
+  "eventId": "uuid",
+  "title": "Tech Conference 2025",
+  "description": "Mô tả chi tiết sự kiện...",
+  "category": "Technology",
+  "location": "Hội trường A, Hanoi",
+  "startDate": "2025-06-15T09:00:00",
+  "endDate": "2025-06-15T18:00:00",
+  "thumbnailUrl": "https://cdn.example.com/events/img.jpg",
+  "organizer": {
+    "organizerId": "uuid",
+    "name": "TechCorp Vietnam"
+  },
+  "ticketTypes": [
+    {
+      "ticketTypeId": "uuid",
+      "name": "Standard",
+      "price": 100000,
+      "totalQuantity": 200,
+      "remainingQuantity": 50
+    },
+    {
+      "ticketTypeId": "uuid",
+      "name": "VIP",
+      "price": 500000,
+      "totalQuantity": 50,
+      "remainingQuantity": 10
+    }
+  ],
+  "status": "PUBLISHED"
+}
+```
+
+---
+
+### 2.3 Create Event
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+POST /events
+```
+
+**Request Body:**
+```json
+{
+  "title": "Tech Conference 2025",
+  "description": "Mô tả chi tiết...",
+  "categoryId": "uuid",
+  "location": "Hội trường A, Hanoi",
+  "startDate": "2025-06-15T09:00:00",
+  "endDate": "2025-06-15T18:00:00",
+  "thumbnailUrl": "https://cdn.example.com/events/img.jpg",
+  "ticketTypes": [
+    {
+      "name": "Standard",
+      "price": 100000,
+      "totalQuantity": 200
+    },
+    {
+      "name": "VIP",
+      "price": 500000,
+      "totalQuantity": 50
+    }
+  ]
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "eventId": "uuid",
+  "title": "Tech Conference 2025",
+  "status": "DRAFT",
+  "createdAt": "2025-01-10T10:00:00"
+}
+```
+
+---
+
+### 2.4 Publish / Unpublish Event
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+PATCH /events/{eventId}/publish
+```
+
+**Request Body:**
+```json
+{
+  "publish": true
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "eventId": "uuid",
+  "status": "PUBLISHED",
+  "updatedAt": "2025-01-10T12:00:00"
+}
+```
+
+---
+
+### 2.5 Update Event
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+PUT /events/{eventId}
+```
+
+**Request Body:** _(same structure as Create Event)_
+
+**Response `200 OK`:**
+```json
+{
+  "eventId": "uuid",
+  "title": "Tech Conference 2025 (Updated)",
+  "updatedAt": "2025-01-10T12:00:00"
+}
+```
+
+---
+
+### 2.6 Delete Event
+
+> **Role:** `ORGANIZER` or `ADMIN`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+DELETE /events/{eventId}
+```
+
+**Response `204 No Content`**
+
+---
+
+## 3. Ticket Reservation
+
+> Luồng mua vé gồm 2 bước: **Giữ chỗ trước** → **Thanh toán sau**.  
+> Reservation tự động hết hạn sau 10 phút nếu không thanh toán.
+
+```
+Bước 1: POST /reservations          → giữ chỗ, nhận reservationId
+Bước 2: POST /tickets/purchase      → thanh toán, truyền reservationId vào
+```
+
+---
+
+### 3.1 Create Reservation (Giữ chỗ)
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+POST /reservations
+```
+
+**Request Body:**
+```json
+{
+  "ticketTypeId": "uuid",
+  "quantity": 2
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "reservationId": "uuid",
+  "ticketTypeId": "uuid",
+  "ticketTypeName": "VIP",
+  "eventTitle": "Tech Conference 2025",
+  "quantity": 2,
+  "unitPrice": 500000,
+  "totalPrice": 1000000,
+  "status": "HOLDING",
+  "expiresAt": "2025-06-15T09:10:00",
+  "createdAt": "2025-06-15T09:00:00"
+}
+```
+
+> ⚠️ Nếu không đủ vé: `409 TICKET_SOLD_OUT`
+
+---
+
+### 3.2 Cancel Reservation (Hủy giữ chỗ)
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`  
+> Gọi khi user thoát trang thanh toán để trả vé lại ngay, không cần chờ hết hạn.
+
+```
+DELETE /reservations/{reservationId}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "reservationId": "uuid",
+  "status": "CANCELLED",
+  "message": "Đã hủy giữ chỗ, vé đã được trả lại."
+}
+```
+
+---
+
+### 3.3 Get Reservation Status
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`  
+> Frontend dùng để poll trạng thái và hiển thị đồng hồ đếm ngược.
+
+```
+GET /reservations/{reservationId}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "reservationId": "uuid",
+  "status": "HOLDING",
+  "expiresAt": "2025-06-15T09:10:00",
+  "secondsRemaining": 347
+}
+```
+
+**Các giá trị `status`:**
+
+| Status      | Ý nghĩa                                      |
+|-------------|----------------------------------------------|
+| `HOLDING`   | Đang giữ chỗ, chờ thanh toán                 |
+| `CONFIRMED` | Đã thanh toán thành công                     |
+| `EXPIRED`   | Hết 10 phút, vé được trả lại tự động         |
+| `CANCELLED` | User chủ động hủy                            |
+
+---
+
+## 4. Tickets
+
+### 4.1 Purchase Ticket (Xác nhận thanh toán)
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`  
+> Phải có `reservationId` hợp lệ (status = `HOLDING`) từ Bước 1.
+
+```
+POST /tickets/purchase
+```
+
+**Request Body:**
+```json
+{
+  "reservationId": "uuid",
+  "paymentMethod": "VNPAY | MOMO | STRIPE"
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "orderId": "uuid",
+  "status": "PENDING_PAYMENT",
+  "totalAmount": 1000000,
+  "paymentMethod": "VNPAY",
+  "paymentUrl": "https://payment.gateway.com/pay?orderId=..."
+}
+```
+
+> ⚠️ Nếu reservation đã `EXPIRED`: `409 RESERVATION_EXPIRED`  
+> ⚠️ Nếu reservation không thuộc user hiện tại: `403 FORBIDDEN`
+
+---
+
+### 4.2 Get E-Ticket (QR Code)
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /tickets/{ticketId}/qr
+```
+
+**Response `200 OK`:**
+```json
+{
+  "ticketId": "uuid",
+  "qrCodeUrl": "https://cdn.example.com/qr/ticket-uuid.png",
+  "qrCodeData": "BASE64_ENCODED_QR_STRING",
+  "attendeeName": "Nguyen Van A",
+  "eventName": "Tech Conference 2025",
+  "ticketTypeName": "VIP",
+  "location": "Hội trường A, Hanoi",
+  "startTime": "2025-06-15T09:00:00",
+  "endTime": "2025-06-15T18:00:00",
+  "checkinStatus": false
+}
+```
+
+---
+
+### 4.3 Check-in by QR Code (Attendee self check-in)
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+POST /tickets/checkin
+```
+
+**Request Body:**
+```json
+{
+  "qrCodeData": "BASE64_ENCODED_QR_STRING"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "ticketId": "uuid",
+  "status": "CHECKED_IN",
+  "checkedInAt": "2025-06-15T09:15:00",
+  "message": "Check-in thành công!"
+}
+```
+
+---
+
+### 4.4 View Registered Event History
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /tickets/my-history
+```
+
+**Query Parameters:**
+
+| Parameter | Type     | Required | Description               |
+|-----------|----------|----------|---------------------------|
+| `page`    | `int`    | No       | Default `0`               |
+| `size`    | `int`    | No       | Default `10`              |
+| `status`  | `string` | No       | `UPCOMING`, `PAST`, `ALL` |
+
+**Response `200 OK`:**
+```json
+{
+  "content": [
+    {
+      "ticketId": "uuid",
+      "eventName": "Tech Conference 2025",
+      "eventDate": "2025-06-15T09:00:00",
+      "location": "Hội trường A, Hanoi",
+      "ticketTypeName": "Standard",
+      "checkinStatus": true,
+      "purchasedAt": "2025-01-10T10:30:00"
+    }
+  ],
+  "totalElements": 5,
+  "totalPages": 1
+}
+```
+
+---
+
+## 5. Attendee
+
+### 5.1 Get Profile
+
+> **Role:** `ATTENDEE`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /attendees/me
+```
+
+**Response `200 OK`:**
+```json
+{
+  "userId": "uuid",
+  "fullName": "Nguyen Van A",
+  "email": "user@example.com",
+  "phone": "0901234567",
+  "avatarUrl": "https://cdn.example.com/avatars/user.jpg",
+  "createdAt": "2024-01-01T00:00:00"
+}
+```
+
+---
+
+## 6. Organizer
+
+### 6.1 Get Registrant List
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /organizer/events/{eventId}/registrants
+```
+
+**Query Parameters:**
+
+| Parameter   | Type     | Required | Description                     |
+|-------------|----------|----------|---------------------------------|
+| `page`      | `int`    | No       | Default `0`                     |
+| `size`      | `int`    | No       | Default `20`                    |
+| `checkedIn` | `boolean`| No       | Filter by check-in status       |
+
+**Response `200 OK`:**
+```json
+{
+  "content": [
+    {
+      "ticketId": "uuid",
+      "attendeeName": "Nguyen Van A",
+      "email": "user@example.com",
+      "ticketType": "VIP",
+      "purchasedAt": "2025-01-10T10:30:00",
+      "checkedIn": false
+    }
+  ],
+  "totalElements": 150,
+  "totalPages": 8
+}
+```
+
+---
+
+### 6.2 Check-in Attendee (Organizer scans QR)
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+POST /organizer/events/{eventId}/checkin
+```
+
+**Request Body:**
+```json
+{
+  "qrCodeData": "BASE64_ENCODED_QR_STRING"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "ticketId": "uuid",
+  "attendeeName": "Nguyen Van A",
+  "ticketType": "VIP",
+  "status": "CHECKED_IN",
+  "checkedInAt": "2025-06-15T09:20:00"
+}
+```
+
+---
+
+### 6.3 Send Email Notification
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+POST /organizer/events/{eventId}/notify
+```
+
+**Request Body:**
+```json
+{
+  "subject": "Thông tin quan trọng về sự kiện",
+  "content": "Nội dung email thông báo...",
+  "targetGroup": "ALL | CHECKED_IN | NOT_CHECKED_IN"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "message": "Email đã được gửi thành công",
+  "recipientCount": 150,
+  "sentAt": "2025-06-14T08:00:00"
+}
+```
+
+---
+
+### 6.4 Ticket Sales Report
+
+> **Role:** `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /organizer/events/{eventId}/reports/sales
+```
+
+**Response `200 OK`:**
+```json
+{
+  "eventId": "uuid",
+  "eventTitle": "Tech Conference 2025",
+  "totalTicketsSold": 180,
+  "totalRevenue": 25000000,
+  "commission": 2500000,
+  "netRevenue": 22500000,
+  "breakdown": [
+    {
+      "ticketType": "Standard",
+      "quantitySold": 150,
+      "revenue": 15000000
+    },
+    {
+      "ticketType": "VIP",
+      "quantitySold": 30,
+      "revenue": 10000000
+    }
   ]
 }
 ```
 
 ---
 
-## 6. Admin
+## 7. Admin
 
-> Tất cả endpoint trong mục này yêu cầu đăng nhập với vai trò `ADMIN`.
+### 7.1 Approve / Reject Event
 
-### Danh sách sự kiện chờ duyệt
-```
-GET /admin/events/cho-duyet
-```
-**Response 200:** danh sách sự kiện có `trangThai: "CHO_DUYET"`, phân trang tương tự mục 2.
+> **Role:** `ADMIN`  
+> **Headers:** `Authorization: Bearer <token>`
 
----
+```
+PATCH /admin/events/{eventId}/approval
+```
 
-### Duyệt / Từ chối sự kiện
-```
-PATCH /admin/events/{id}/duyet
-```
-**Body:**
+**Request Body:**
 ```json
 {
-  "quyetDinh": "CHAP_THUAN",
-  "lyDo": ""
+  "action": "APPROVE | REJECT",
+  "reason": "Lý do từ chối (required nếu REJECT)"
 }
 ```
-> `quyetDinh`: `CHAP_THUAN` hoặc `TU_CHOI`. Nếu từ chối, `lyDo` là bắt buộc.
 
----
-
-### Quản lý Organizer
-
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| GET | `/admin/organizers` | Danh sách organizer (phân trang) |
-| GET | `/admin/organizers/{id}` | Chi tiết một organizer |
-| PATCH | `/admin/organizers/{id}/trang-thai` | Khoá / mở khoá tài khoản |
-| DELETE | `/admin/organizers/{id}` | Xoá organizer |
-
----
-
-### Quản lý danh mục
-
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| GET | `/admin/danh-muc` | Lấy toàn bộ danh mục |
-| POST | `/admin/danh-muc` | Tạo danh mục mới |
-| PUT | `/admin/danh-muc/{id}` | Cập nhật danh mục |
-| DELETE | `/admin/danh-muc/{id}` | Xoá danh mục |
-
-**Body tạo/sửa:**
+**Response `200 OK`:**
 ```json
 {
-  "tenDanhMuc": "Âm nhạc",
-  "icon": "music-note"
+  "eventId": "uuid",
+  "status": "APPROVED",
+  "reviewedAt": "2025-01-11T09:00:00",
+  "reviewedBy": "admin@example.com"
 }
 ```
 
 ---
 
-### Cấu hình commission
+### 7.2 Manage Organizers (CRUD)
+
+> **Role:** `ADMIN`  
+> **Headers:** `Authorization: Bearer <token>`
+
+#### Get all organizers
 ```
-PUT /admin/cau-hinh/commission
+GET /admin/organizers?page=0&size=10&search=keyword
 ```
-**Body:**
+
+#### Get organizer detail
+```
+GET /admin/organizers/{organizerId}
+```
+
+#### Create organizer
+```
+POST /admin/organizers
+```
 ```json
 {
-  "phanTramHoaHong": 5.0,
-  "apDungTuNgay": "2026-04-01"
+  "fullName": "Tran Thi B",
+  "email": "organizer@example.com",
+  "phone": "0909123456",
+  "organizationName": "TechCorp Vietnam"
 }
 ```
-**Response 200:** trả về cấu hình hiện tại sau khi cập nhật.
+
+#### Update organizer
+```
+PUT /admin/organizers/{organizerId}
+```
+
+#### Delete organizer
+```
+DELETE /admin/organizers/{organizerId}
+```
+
+**Response `204 No Content`**
 
 ---
 
-### Báo cáo toàn hệ thống
-```
-GET /admin/bao-cao
-```
-**Query params:** `tuNgay`, `denNgay`
+### 7.3 Manage Categories
 
-**Response 200:**
+> **Role:** `ADMIN`  
+> **Headers:** `Authorization: Bearer <token>`
+
+#### Get all categories
+```
+GET /admin/categories
+```
+**Response `200 OK`:**
+```json
+[
+  { "categoryId": "uuid", "name": "Technology", "slug": "technology" },
+  { "categoryId": "uuid", "name": "Music", "slug": "music" }
+]
+```
+
+#### Create category
+```
+POST /admin/categories
+```
+```json
+{ "name": "Sports", "slug": "sports" }
+```
+
+#### Update category
+```
+PUT /admin/categories/{categoryId}
+```
+
+#### Delete category
+```
+DELETE /admin/categories/{categoryId}
+```
+
+---
+
+### 7.4 Configure Commission
+
+> **Role:** `ADMIN`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+PUT /admin/settings/commission
+```
+
+**Request Body:**
 ```json
 {
-  "tongSuKien": 142,
-  "tongNguoiDung": 3850,
-  "tongDoanhThu": 1245000000,
-  "tongHoaHong": 62250000,
-  "suKienTheoThang": [
-    { "thang": "2026-01", "soSuKien": 18, "doanhThu": 210000000 },
-    { "thang": "2026-02", "soSuKien": 24, "doanhThu": 380000000 }
+  "commissionRate": 10.0,
+  "effectiveFrom": "2025-02-01"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "commissionRate": 10.0,
+  "effectiveFrom": "2025-02-01",
+  "updatedBy": "admin@example.com",
+  "updatedAt": "2025-01-15T08:00:00"
+}
+```
+
+---
+
+### 7.5 System-wide Report
+
+> **Role:** `ADMIN`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /admin/reports/overview
+```
+
+**Query Parameters:**
+
+| Parameter   | Type     | Required | Description              |
+|-------------|----------|----------|--------------------------|
+| `from`      | `string` | No       | ISO date `YYYY-MM-DD`    |
+| `to`        | `string` | No       | ISO date `YYYY-MM-DD`    |
+
+**Response `200 OK`:**
+```json
+{
+  "totalEvents": 120,
+  "totalOrganizers": 35,
+  "totalAttendees": 5400,
+  "totalRevenue": 850000000,
+  "totalCommission": 85000000,
+  "pendingApprovalEvents": 8,
+  "topEvents": [
+    {
+      "eventId": "uuid",
+      "title": "Music Festival 2025",
+      "ticketsSold": 900,
+      "revenue": 90000000
+    }
   ]
 }
 ```
 
 ---
 
-### Quản lý thông báo hệ thống
+## 8. Notifications
 
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| GET | `/admin/thong-bao` | Danh sách thông báo đã gửi |
-| POST | `/admin/thong-bao` | Gửi thông báo tới tất cả người dùng |
-| DELETE | `/admin/thong-bao/{id}` | Xoá thông báo |
+### 8.1 Get User Notifications
 
-**Body gửi thông báo:**
+> **Role:** `ATTENDEE` / `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+GET /notifications
+```
+
+**Response `200 OK`:**
 ```json
 {
-  "tieuDe": "Bảo trì hệ thống",
-  "noiDung": "Hệ thống sẽ bảo trì từ 23h00 đến 01h00 ngày 10/04/2026.",
-  "doiTuong": "TAT_CA"
+  "content": [
+    {
+      "notificationId": "uuid",
+      "title": "Sự kiện sắp diễn ra",
+      "message": "Tech Conference 2025 sẽ diễn ra vào ngày mai.",
+      "type": "EVENT_REMINDER",
+      "read": false,
+      "createdAt": "2025-06-14T08:00:00"
+    }
+  ],
+  "totalElements": 10,
+  "unreadCount": 3
 }
 ```
-> `doiTuong`: `TAT_CA`, `ATTENDEE`, `ORGANIZER`
 
 ---
 
-## Mã lỗi chung
+### 8.2 Mark Notification as Read
 
-| HTTP | Mã lỗi | Ý nghĩa |
-|---|---|---|
-| 400 | `DU_LIEU_KHONG_HOP_LE` | Request body sai định dạng hoặc thiếu trường bắt buộc |
-| 401 | `CHUA_DANG_NHAP` | Token không có hoặc đã hết hạn |
-| 403 | `KHONG_CO_QUYEN` | Tài khoản không đủ quyền thực hiện hành động |
-| 404 | `KHONG_TIM_THAY` | Tài nguyên không tồn tại |
-| 409 | `XUNG_DOT_DU_LIEU` | Dữ liệu đã tồn tại (ví dụ: email trùng) |
-| 500 | `LOI_HE_THONG` | Lỗi server, liên hệ admin |
+> **Role:** `ATTENDEE` / `ORGANIZER`  
+> **Headers:** `Authorization: Bearer <token>`
+
+```
+PATCH /notifications/{notificationId}/read
+```
+
+**Response `200 OK`:**
+```json
+{
+  "notificationId": "uuid",
+  "read": true
+}
+```
+
+---
+
+## 9. Error Codes
+
+| HTTP Status | Error Code              | Description                              |
+|-------------|-------------------------|------------------------------------------|
+| `400`       | `VALIDATION_ERROR`      | Request body validation failed           |
+| `401`       | `UNAUTHORIZED`          | Missing or invalid JWT token             |
+| `403`       | `FORBIDDEN`             | Insufficient role/permission             |
+| `404`       | `RESOURCE_NOT_FOUND`    | Event, ticket, or user not found         |
+| `409`       | `TICKET_SOLD_OUT`       | No tickets remaining for this type       |
+| `409`       | `ALREADY_CHECKED_IN`    | Ticket has already been checked in       |
+| `409`       | `RESERVATION_EXPIRED`   | Reservation hết hạn trước khi thanh toán |
+| `409`       | `RESERVATION_NOT_FOUND` | reservationId không tồn tại hoặc đã hủy |
+| `422`       | `PAYMENT_FAILED`        | Payment gateway returned failure         |
+| `500`       | `INTERNAL_SERVER_ERROR` | Unexpected server-side error             |
+
+**Error Response Format:**
+```json
+{
+  "timestamp": "2025-01-10T10:00:00",
+  "status": 404,
+  "error": "RESOURCE_NOT_FOUND",
+  "message": "Event with id 'uuid' not found",
+  "path": "/api/v1/events/uuid"
+}
+```
+
+---
+
+## Appendix: Role Permission Matrix
+
+| Endpoint Group          | PUBLIC | ATTENDEE | ORGANIZER | ADMIN |
+|-------------------------|:------:|:--------:|:---------:|:-----:|
+| Search / View Events    | ✅     | ✅       | ✅        | ✅    |
+| Reserve Ticket          | ❌     | ✅       | ❌        | ❌    |
+| Purchase Ticket         | ❌     | ✅       | ❌        | ❌    |
+| E-Ticket / QR / History | ❌     | ✅       | ❌        | ❌    |
+| Create / Edit Event     | ❌     | ❌       | ✅        | ❌    |
+| Registrants / Sales     | ❌     | ❌       | ✅        | ✅    |
+| Organizer Check-in      | ❌     | ❌       | ✅        | ❌    |
+| Send Notifications      | ❌     | ❌       | ✅        | ✅    |
+| Approve Events          | ❌     | ❌       | ❌        | ✅    |
+| Manage Organizers       | ❌     | ❌       | ❌        | ✅    |
+| Manage Categories       | ❌     | ❌       | ❌        | ✅    |
+| Configure Commission    | ❌     | ❌       | ❌        | ✅    |
+| System Reports          | ❌     | ❌       | ❌        | ✅    |
