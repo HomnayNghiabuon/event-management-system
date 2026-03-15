@@ -42,7 +42,6 @@
 ## 4. Khó khăn / Cần hỗ trợ
 
 - Chưa thống nhất được đầy đủ các endpoint API cần thiết.
-- Cần xác nhận thêm yêu cầu từ giảng viên về phạm vi chức năng.
 
 ---
 

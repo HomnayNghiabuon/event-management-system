@@ -41,7 +41,6 @@
 
 ## 4. Khó khăn / Cần hỗ trợ
 
-- Cần thống nhất công nghệ frontend (React / Vue) trước khi bắt đầu tuần 3.
 - Cần cấu hình môi trường dev chung (Docker / env file) để tránh xung đột giữa các thành viên.
 
 ---
