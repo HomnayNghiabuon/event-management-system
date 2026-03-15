@@ -22,7 +22,7 @@
 |----------|------------|---|
 | Phân tích yêu cầu | Done | 100% |
 | Thiết kế database | Done | 100% |
-| Viết tài liệu API | Done | 80% |
+| Viết tài liệu API | Done | 100% |
 | Thiết kế kiến trúc hệ thống | Done | 100% |
 
 **Tổng tiến độ: 100%**
@@ -34,8 +34,8 @@
 | Thành viên | Công việc dự kiến |
 |------------|-------------------|
 | Nguyễn Ích Nghĩa | Xây dựng backend: API xác thực (đăng ký, đăng nhập, phân quyền) |
-| Nguyễn Xuân Khánh | Xây dựng backend: Tích hợp database |
-| Lê Hữu Lộc | Hoàn thành phân tích hệ thống |
+| Nguyễán Xuân Khánh | Xây dựng backend: API quản lý sự kiện (CRUD) + tích hợp database |
+| Lê Hữu Lộc | Xây dựng frontend: Dashboard tổng quan & màn hình danh sách sự kiện |
 
 ---
 
