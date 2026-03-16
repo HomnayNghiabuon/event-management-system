@@ -2,7 +2,7 @@
 **Tuần:** 1 (02/03/2026 – 08/03/2026)
 **Nhóm:** 10
 **Đề tài:** Quản Lý Sự Kiện
-**Nhóm trưởng:** Lê Hữu Lộc – 2251052072
+**Nhóm trưởng:** Lê Hữu Lộc – 2254052040
 
 ---
 
@@ -10,9 +10,9 @@
 
 | Thành viên | MSSV | Công việc | Link Commit/PR |
 |------------|------|-----------|----------------|
-| Nguyễn Ích Nghĩa | 123456 | Khởi tạo cấu trúc dự án + Viết tài liệu API (bản nháp) | [112b1d1](https://github.com/HomnayNghiabuon/event-management-system/commit/112b1d1) / [a9f250d](https://github.com/HomnayNghiabuon/event-management-system/commit/a9f250d) |
-| Nguyễn Xuân Khánh | 123457 | Thiết kế database (bản nháp) | [b66b266](https://github.com/HomnayNghiabuon/event-management-system/commit/b66b266) / [b67f937](https://github.com/HomnayNghiabuon/event-management-system/commit/b67f937) |
-| Lê Hữu Lộc | 2251052072 | Phân tích yêu cầu hệ thống | — |
+| Nguyễn Ích Nghĩa | 2251052072 | Khởi tạo cấu trúc dự án + Viết tài liệu API (bản nháp) | [112b1d1](https://github.com/HomnayNghiabuon/event-management-system/commit/112b1d1) / [a9f250d](https://github.com/HomnayNghiabuon/event-management-system/commit/a9f250d) |
+| Nguyễn Xuân Khánh | 2251012078 | Thiết kế database (bản nháp) | [b66b266](https://github.com/HomnayNghiabuon/event-management-system/commit/b66b266) / [b67f937](https://github.com/HomnayNghiabuon/event-management-system/commit/b67f937) |
+| Lê Hữu Lộc | 2254052040 | Phân tích yêu cầu hệ thống | — |
 
 ---
 
