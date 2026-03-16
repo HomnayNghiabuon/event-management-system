@@ -28,22 +28,36 @@
 POST /auth/register
 ```
 
-**Request Body:**
+**Request Body – ATTENDEE:**
 ```json
 {
   "fullName": "Nguyen Van A",
   "email": "user@example.com",
   "password": "string",
-  "role": "ATTENDEE | ORGANIZER"
+  "role": "ATTENDEE"
 }
 ```
+
+**Request Body – ORGANIZER** *(thêm `phone` và `organizationName` bắt buộc)*:
+```json
+{
+  "fullName": "Nguyen Van A",
+  "email": "organizer@example.com",
+  "password": "string",
+  "role": "ORGANIZER",
+  "phone": "0901234567",
+  "organizationName": "Cong ty TNHH ABC"
+}
+```
+
+> **Lưu ý:** Với `role = ORGANIZER`, các field `phone` và `organizationName` là **bắt buộc**. Với `role = ATTENDEE`, hai field này được bỏ qua.
 
 **Response `201 Created`:**
 ```json
 {
   "userId": "uuid",
   "email": "user@example.com",
-  "role": "ATTENDEE",
+  "role": "ATTENDEE | ORGANIZER",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
