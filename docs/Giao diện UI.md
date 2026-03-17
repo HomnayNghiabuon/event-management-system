@@ -21,8 +21,7 @@
 ---
 
 ## 5. Đăng ký vé (Vé hết)
-![Đăng ký vé hết](./Giao%20diện%20UI/Đăng%20ký%20vé%20hết.png)
-
+![Đăng ký vé hết](./Giao%20diện%20UI/Đăng%20ký%20vé_%20vé%20hết.png)
 ---
 
 ## 6. Thanh toán
@@ -56,4 +55,4 @@
 ---
 
 ## 12. Xem lịch sử vé (trống)
-![Lịch sử trống](./Giao%20diện%20UI/Xem%20lịch%20sử%20đặt%20vé%20trống.png)
+![Lịch sử trống](./Giao%20diện%20UI/Xem%20lịch%20sử%20đặt%20vé_%20trống.png)
