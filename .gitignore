@@ -1,0 +1,22 @@
+### AI Tools ###
+.claude/
+.cursor/
+.copilot/
+.aider*
+.continue/
+*.ai-context
+CLAUDE.md
+
+### Environment ###
+.env
+.env.local
+.env.*.local
+
+### OS ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### Logs ###
+*.log
+logs/
