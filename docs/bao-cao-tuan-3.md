@@ -12,7 +12,7 @@
 |------------|------|-----------|----------------|
 | Nguyễn Ích Nghĩa | 123456 | Xây dựng backend Authentication API (đăng ký, đăng nhập, làm mới token), cấu hình Spring Security + JWT, tích hợp MySQL, thêm Swagger UI, viết tài liệu cài đặt | [4c0aeb9](https://github.com/HomnayNghiabuon/event-management-system/commit/4c0aeb9) / [cb6f0e6](https://github.com/HomnayNghiabuon/event-management-system/commit/cb6f0e6) |
 | Nguyễn Xuân Khánh | 123457 | Viết Entity cho 10 bảng (Event, Ticket, Order, TicketType, TicketReservation, Notification, EmailLog, Category, Commission, OrderDetail) | [ddbdf35](https://github.com/HomnayNghiabuon/event-management-system/commit/ddbdf35) |
-| Lê Hữu Lộc | 2251052072 | Khởi tạo cấu trúc dự án frontend | — |
+| Lê Hữu Lộc | 2251052072 | Thiết kế kiến trúc hệ thống | — |
 
 ---
 
