@@ -8,6 +8,11 @@ spring:
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
 
+  sql:
+    init:
+      mode: always       # Luôn chạy data.sql khi khởi động
+      encoding: UTF-8
+
   jpa:
     database-platform: ${JPA_PLATFORM:org.hibernate.dialect.H2Dialect}
     hibernate:
@@ -16,6 +21,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    defer-datasource-initialization: true   # Chạy data.sql SAU KHI Hibernate tạo bảng xong
     open-in-view: false
 
   h2:
