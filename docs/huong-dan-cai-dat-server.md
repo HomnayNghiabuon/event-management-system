@@ -14,24 +14,37 @@ Maven không cần cài – project đã có sẵn `mvnw`.
 
 ---
 
-## Các bước cài đặt
+## Lấy code
 
-**1. Clone project**
+**Chưa có repo:**
 
 ```bash
 git clone https://github.com/HomnayNghiabuon/event-management-system.git
-cd event-management-system/event-management-server
+cd event-management-system
+git checkout dev
 ```
 
-**2. Tạo database**
+**Đã có repo (thành viên trong nhóm):**
+
+```bash
+git checkout dev
+git pull origin dev
+```
+
+---
+
+## Cài đặt
+
+**1. Tạo database**
 
 ```sql
 CREATE DATABASE eventdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-**3. Tạo file cấu hình**
+**2. Tạo file cấu hình**
 
 ```bash
+cd event-management-server
 copy .env.example .env
 ```
 
@@ -43,7 +56,7 @@ DB_PASSWORD=password_mysql_cua_ban
 
 Nếu MySQL không có password thì để trống.
 
-**4. Chạy server**
+**3. Chạy server**
 
 ```bash
 run-dev.bat        # Windows
@@ -56,7 +69,7 @@ Server chạy tại `http://localhost:8081`
 
 ## Kiểm tra
 
-Mở trình duyệt vào `http://localhost:8081/swagger-ui.html` để test API.
+Mở `http://localhost:8081/swagger-ui.html` để test API.
 
 **Tài khoản test có sẵn (password: `123456`):**
 
@@ -70,21 +83,10 @@ Mở trình duyệt vào `http://localhost:8081/swagger-ui.html` để test API.
 
 ## Lỗi thường gặp
 
-**Connection refused / Communications link failure**
-MySQL chưa chạy. Khởi động MySQL rồi thử lại.
+**Connection refused** – MySQL chưa chạy, khởi động lại MySQL.
 
-**Access denied for user 'root'**
-Sai password. Kiểm tra lại `DB_PASSWORD` trong `.env`.
+**Access denied** – Sai password, kiểm tra lại `DB_PASSWORD` trong `.env`.
 
-**Unknown database 'eventdb'**
-Chưa tạo database. Chạy lại lệnh ở bước 2.
+**Unknown database 'eventdb'** – Chưa tạo database, chạy lại lệnh ở bước 1.
 
-**Port 8081 was already in use**
-
-```bash
-# Windows
-netstat -ano | findstr :8081
-taskkill /PID <pid> /F
-```
-
-Hoặc đổi `SERVER_PORT=8082` trong `.env`.
+**Port 8081 was already in use** – Đổi `SERVER_PORT=8082` trong `.env` hoặc tắt process đang chiếm port.
