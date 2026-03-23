@@ -1,128 +1,118 @@
-erDiagram
-    %% QUAN HỆ GIỮA CÁC BẢNG (RELATIONSHIPS)
-    users ||--o{ events : "Tổ chức (organizer_id)"
-    categories ||--o{ events : "Phân loại (category_id)"
-    events ||--o{ ticket_types : "Có các hạng vé (event_id)"
-    
-    users ||--o{ orders : "Đặt hàng (user_id)"
-    orders ||--o{ order_details : "Bao gồm (order_id)"
-    ticket_types ||--o{ order_details : "Chi tiết vé mua (ticket_type_id)"
-    
-    order_details ||--o{ tickets : "Sinh ra vé (order_detail_id)"
-    users ||--o{ tickets : "Sở hữu vé (attendee_id)"
-    
-    users ||--o{ ticket_reservations : "Giữ chỗ (user_id)"
-    ticket_types ||--o{ ticket_reservations : "Vé được giữ (ticket_type_id)"
-    
-    users ||--o{ notifications : "Nhận thông báo (user_id)"
-    
-    users ||--o{ email_logs : "Người nhận (recipient_id)"
-    events ||--o{ email_logs : "Thuộc sự kiện (event_id)"
+# Event Management System - Database Schema
 
-    %% CHI TIẾT CÁC BẢNG (ENTITIES & ATTRIBUTES)
-    users {
-        INT user_id PK
-        VARCHAR name
-        VARCHAR email "UNIQUE"
-        VARCHAR password
-        VARCHAR phone
-        ENUM role "ADMIN, ORGANIZER, ATTENDEE"
-        DATETIME created_at
-        DATE dob
-        BOOLEAN is_active
-        VARCHAR gender
-    }
 
-    categories {
-        INT category_id PK
-        VARCHAR name
-        TEXT description
-    }
+## User
 
-    events {
-        INT event_id PK
-        VARCHAR title
-        TEXT description
-        DATE event_date
-        TIME start_time
-        TIME end_time
-        VARCHAR status
-        VARCHAR location
-        VARCHAR thumbnail
-        DECIMAL min_price
-        INT organizer_id FK
-        INT category_id FK
-    }
+| Field | Type | Key |
+| --- | --- | --- |
+| user_id | INT | PK |
+| name | VARCHAR(100) |  |
+| email | VARCHAR(150) | UNIQUE |
+| password | VARCHAR(255) |  |
+| phone | VARCHAR(20) |  |
+| role | VARCHAR(20) |  |
+| created_at | DATETIME |  |
 
-    ticket_types {
-        INT ticket_type_id PK
-        INT event_id FK
-        VARCHAR name
-        DECIMAL price
-        INT quantity
-    }
 
-    orders {
-        INT order_id PK
-        INT user_id FK
-        DECIMAL total_price
-        VARCHAR payment_status
-        DATETIME created_at
-        VARCHAR payment_method
-        VARCHAR transaction_id
-    }
+## Categories
 
-    order_details {
-        INT order_detail_id PK
-        INT order_id FK
-        INT ticket_type_id FK
-        INT quantity
-        DECIMAL price
-    }
+| Field | Type | Key |
+| --- | --- | --- |
+| category_id | INT | PK |
+| name | VARCHAR(100) |  |
+| description | TEXT |  |
 
-    tickets {
-        INT ticket_id PK
-        INT order_detail_id FK
-        INT attendee_id FK
-        VARCHAR qr_code
-        BOOLEAN checkin_status
-        DATETIME checkin_time
-        VARCHAR attendee_name
-    }
 
-    notifications {
-        INT notification_id PK
-        INT user_id FK
-        VARCHAR title
-        TEXT message
-        DATETIME created_at
-        BOOLEAN is_read
-        VARCHAR type
-    }
+## Events
 
-    email_logs {
-        INT email_id PK
-        INT recipient_id FK
-        INT event_id FK
-        VARCHAR subject
-        TEXT content
-        DATETIME send_at
-    }
+| Field | Type | Key |
+| --- | --- | --- |
+| event_id | INT | PK |
+| title | VARCHAR(200) |  |
+| description | TEXT |  |
+| location | VARCHAR(200) |  |
+| event_date | DATE |  |
+| start_time | TIME |  |
+| end_time | TIME |  |
+| status | VARCHAR(20) |  |
+| organizer_id | INT | FK |
+| category_id | INT | FK |
 
-    commissions {
-        INT commission_id PK
-        DECIMAL percent
-        DATETIME created_at
-        DATETIME effective_from
-        BOOLEAN is_active
-    }
 
-    ticket_reservations {
-        INT reservation_id PK
-        INT user_id FK
-        INT ticket_type_id FK
-        INT quantity
-        VARCHAR status
-        DATETIME expires_at
-        DATETIME created_at
-    }
+## TicketTypes
+
+| Field | Type | Key |
+| --- | --- | --- |
+| ticket_type_id | INT | PK |
+| event_id | INT | FK |
+| name | VARCHAR(100) |  |
+| price | DECIMAL(10,2) |  |
+| quantity | INT |  |
+
+
+## Orders
+
+| Field | Type | Key |
+| --- | --- | --- |
+| order_id | INT | PK |
+| user_id | INT | FK |
+| event_id | INT | FK |
+| total_price | DECIMAL(10,2) |  |
+| payment_status | VARCHAR(20) |  |
+| created_at | DATETIME |  |
+
+
+## OrderItems
+
+| Field | Type | Key |
+| --- | --- | --- |
+| order_item_id | INT | PK |
+| order_id | INT | FK |
+| ticket_type_id | INT | FK |
+| quantity | INT |  |
+| price | DECIMAL(10,2) |  |
+
+
+## Tickets
+
+| Field | Type | Key |
+| --- | --- | --- |
+| ticket_id | INT | PK |
+| order_item_id | INT | FK |
+| qr_code | VARCHAR(255) |  |
+| checkin_status | BOOLEAN |  |
+| checkin_time | DATETIME |  |
+
+
+## Notifications
+
+| Field | Type | Key |
+| --- | --- | --- |
+| notification_id | INT | PK |
+| user_id | INT | FK |
+| title | VARCHAR(200) |  |
+| message | TEXT |  |
+| created_by | INT | FK |
+| created_at | DATETIME |  |
+
+
+## EmailLogs
+
+| Field | Type | Key |
+| --- | --- | --- |
+| email_id | INT | PK |
+| event_id | INT | FK |
+| recipient_email | VARCHAR(150) |  |
+| subject | VARCHAR(200) |  |
+| content | TEXT |  |
+| sent_by | INT | FK |
+| sent_at | DATETIME |  |
+
+
+## Commission
+
+| Field | Type | Key |
+| --- | --- | --- |
+| commission_id | INT | PK |
+| percent | DECIMAL(5,2) |  |
+| created_at | DATETIME |  |

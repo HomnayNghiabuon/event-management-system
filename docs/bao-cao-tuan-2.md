@@ -33,9 +33,9 @@
 
 | Thành viên | Công việc dự kiến |
 |------------|-------------------|
-| Nguyễn Ích Nghĩa | Xây dựng backend: API xác thực (đăng ký, đăng nhập, phân quyền) |
-| Nguyễán Xuân Khánh | Xây dựng backend: API quản lý sự kiện (CRUD) + tích hợp database |
-| Lê Hữu Lộc | Xây dựng frontend: Dashboard tổng quan & màn hình danh sách sự kiện |
+| Nguyễn Ích Nghĩa | Xây dựng backend Authentication API (đăng ký, đăng nhập, làm mới token), cấu hình Spring Security + JWT, tích hợp MySQL, thêm Swagger UI |
+| Nguyễn Xuân Khánh | Viết Entity cho 10 bảng (Event, Ticket, Order, TicketType, TicketReservation, Notification, EmailLog, Category, Commission, OrderDetail) |
+| Lê Hữu Lộc | Thiết kế kiến trúc hệ thống |
 
 ---
 
