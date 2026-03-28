@@ -2,7 +2,6 @@ package com.event.management.server.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,11 +13,6 @@ import java.time.LocalTime;
     @Index(name = "idx_events_title", columnList = "title"),
     @Index(name = "idx_events_date", columnList = "event_date")
 })
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Event {
 
     @Id
@@ -43,7 +37,7 @@ public class Event {
     private LocalTime endTime;
 
     @Column(length = 50)
-    private String status; // (nên chuyển sang enum sau)
+    private String status;
 
     @Column(length = 255)
     private String location;
@@ -67,6 +61,31 @@ public class Event {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    // ===== Constructor rỗng =====
+    public Event() {}
+
+    // ===== Constructor full =====
+    public Event(Integer eventId, String title, String description,
+                 LocalDate eventDate, LocalTime startTime, LocalTime endTime,
+                 String status, String location, String thumbnail,
+                 BigDecimal minPrice, User organizer, Category category,
+                 Instant createdAt, Instant updatedAt) {
+        this.eventId = eventId;
+        this.title = title;
+        this.description = description;
+        this.eventDate = eventDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+        this.location = location;
+        this.thumbnail = thumbnail;
+        this.minPrice = minPrice;
+        this.organizer = organizer;
+        this.category = category;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     // ===== Lifecycle =====
     @PrePersist
     protected void onCreate() {
@@ -80,7 +99,7 @@ public class Event {
         validateTime();
     }
 
-    // ===== Custom validation =====
+    // ===== Validation =====
     private void validateTime() {
         if (startTime != null && endTime != null) {
             if (startTime.isAfter(endTime)) {
@@ -88,4 +107,36 @@ public class Event {
             }
         }
     }
+
+    // ===== Getter =====
+    public Integer getEventId() { return eventId; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public LocalDate getEventDate() { return eventDate; }
+    public LocalTime getStartTime() { return startTime; }
+    public LocalTime getEndTime() { return endTime; }
+    public String getStatus() { return status; }
+    public String getLocation() { return location; }
+    public String getThumbnail() { return thumbnail; }
+    public BigDecimal getMinPrice() { return minPrice; }
+    public User getOrganizer() { return organizer; }
+    public Category getCategory() { return category; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+
+    // ===== Setter =====
+    public void setEventId(Integer eventId) { this.eventId = eventId; }
+    public void setTitle(String title) { this.title = title; }
+    public void setDescription(String description) { this.description = description; }
+    public void setEventDate(LocalDate eventDate) { this.eventDate = eventDate; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public void setStatus(String status) { this.status = status; }
+    public void setLocation(String location) { this.location = location; }
+    public void setThumbnail(String thumbnail) { this.thumbnail = thumbnail; }
+    public void setMinPrice(BigDecimal minPrice) { this.minPrice = minPrice; }
+    public void setOrganizer(User organizer) { this.organizer = organizer; }
+    public void setCategory(Category category) { this.category = category; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
 }

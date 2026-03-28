@@ -20,7 +20,7 @@ public class Ticket {
     @JoinColumn(name = "attendee_id")
     private User attendee;
 
-    @Column(name = "qr_code")
+    @Column(name = "qr_code", length = 255)
     private String qrCode;
 
     @Column(name = "checkin_status")
@@ -29,15 +29,19 @@ public class Ticket {
     @Column(name = "checkin_time")
     private Instant checkinTime;
 
-    @Column(name = "attendee_name")
+    @Column(name = "attendee_name", length = 255)
     private String attendeeName;
 
+    // ===== Lifecycle =====
     @PrePersist
     protected void onCreate() {
         if (this.checkinStatus == null) {
             this.checkinStatus = false;
         }
     }
+
+    // ===== Constructor =====
+    public Ticket() {}
 
     // ===== Getter Setter =====
     public Integer getTicketId() { return ticketId; }
