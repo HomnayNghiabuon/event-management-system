@@ -35,23 +35,20 @@ public class TicketReservation {
     @Column(length = 20)
     private String status; // PENDING, COMPLETED, EXPIRED
 
-    // ===== Lifecycle Callbacks =====
     @PrePersist
     protected void onCreate() {
         this.reservedAt = Instant.now();
-        // Mặc định giữ chỗ trong 10 phút nếu chưa set
         if (this.expiresAt == null) {
-            this.expiresAt = this.reservedAt.plusSeconds(600); 
+            this.expiresAt = this.reservedAt.plusSeconds(600);
         }
         if (this.status == null) {
             this.status = "PENDING";
         }
     }
 
-    // ===== Constructors =====
     public TicketReservation() {}
 
-    // ===== Getters & Setters =====
+    // ===== Getter Setter =====
     public Integer getReservationId() { return reservationId; }
     public void setReservationId(Integer reservationId) { this.reservationId = reservationId; }
 
@@ -72,7 +69,11 @@ public class TicketReservation {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    // ===== Builder Pattern =====
+    public boolean isExpired() {
+        return Instant.now().isAfter(this.expiresAt);
+    }
+
+    // ===== Builder =====
     public static final class ReservationBuilder {
         private Integer reservationId;
         private User user;
