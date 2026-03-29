@@ -1,6 +1,6 @@
 # API Documentation – Event Management System
 
-**Stack:** Spring Boot (REST API) + React (Frontend)  
+**Stack:** Spring Boot (REST API) + Next.js / TypeScript (Frontend)
 **Base URL:** `http://localhost:8080/api/v1`  
 **Authentication:** Bearer Token (JWT)
 

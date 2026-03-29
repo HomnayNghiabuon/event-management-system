@@ -20,13 +20,16 @@
 
 | Hạng mục | Trạng thái | % |
 |----------|------------|---|
-| Thiết kế database | Done | 100% |
-| Viết tài liệu API | Done | 100% |
-| Thiết kế kiến trúc hệ thống | Done | 50% |
-| Backend Authentication API | Done | 100% |
-| Backend Entity & cấu hình database | Done | 100% |
+| Thiết kế database | Hoàn thành | 100% |
+| Viết tài liệu API | Hoàn thành | 100% |
+| Thiết kế kiến trúc hệ thống | Hoàn thành | 100% |
+| Backend Authentication API | Hoàn thành | 100% |
+| Backend Entity & cấu hình database | Hoàn thành | 100% |
+| Backend Event CRUD API + phân quyền | Chưa bắt đầu | 0% |
+| Backend Ticket/Reservation API | Chưa bắt đầu | 0% |
+| Frontend | Chưa bắt đầu | 0% |
 
-**Tổng tiến độ: 90%**
+**Tổng tiến độ: 30%**
 
 ---
 
