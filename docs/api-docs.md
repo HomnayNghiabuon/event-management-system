@@ -962,18 +962,57 @@ PATCH /notifications/{notificationId}/read
 
 ## Appendix: Role Permission Matrix
 
-| Endpoint Group          | PUBLIC | ATTENDEE | ORGANIZER | ADMIN |
-|-------------------------|:------:|:--------:|:---------:|:-----:|
-| Search / View Events    | ✅     | ✅       | ✅        | ✅    |
-| Reserve Ticket          | ❌     | ✅       | ❌        | ❌    |
-| Purchase Ticket         | ❌     | ✅       | ❌        | ❌    |
-| E-Ticket / QR / History | ❌     | ✅       | ❌        | ❌    |
-| Create / Edit Event     | ❌     | ❌       | ✅        | ❌    |
-| Registrants / Sales     | ❌     | ❌       | ✅        | ✅    |
-| Organizer Check-in      | ❌     | ❌       | ✅        | ❌    |
-| Send Notifications      | ❌     | ❌       | ✅        | ✅    |
-| Approve Events          | ❌     | ❌       | ❌        | ✅    |
-| Manage Organizers       | ❌     | ❌       | ❌        | ✅    |
-| Manage Categories       | ❌     | ❌       | ❌        | ✅    |
-| Configure Commission    | ❌     | ❌       | ❌        | ✅    |
-| System Reports          | ❌     | ❌       | ❌        | ✅    |
+Ma trận này mô tả quyền truy cập của từng vai trò vào các nhóm chức năng trong hệ thống.
+
+**Ký hiệu:**
+- `Y` — Được phép truy cập / thực hiện
+- `N` — Không có quyền truy cập
+
+### Bảng tổng quan quyền theo nhóm chức năng
+
+| Nhóm chức năng                  | Mô tả ngắn                                              | PUBLIC | ATTENDEE | ORGANIZER | ADMIN |
+|---------------------------------|---------------------------------------------------------|:------:|:--------:|:---------:|:-----:|
+| Search / View Events            | Tìm kiếm và xem thông tin sự kiện công khai             |   Y    |    Y     |     Y     |   Y   |
+| Reserve Ticket                  | Đặt chỗ giữ vé trước khi thanh toán                    |   N    |    Y     |     N     |   N   |
+| Purchase Ticket                 | Thanh toán và mua vé sự kiện                            |   N    |    Y     |     N     |   N   |
+| E-Ticket / QR / History         | Xem vé điện tử, mã QR check-in và lịch sử giao dịch    |   N    |    Y     |     N     |   N   |
+| Create / Edit Event             | Tạo mới hoặc chỉnh sửa thông tin sự kiện               |   N    |    N     |     Y     |   N   |
+| Registrants / Sales             | Xem danh sách người đăng ký và thống kê doanh thu       |   N    |    N     |     Y     |   Y   |
+| Organizer Check-in              | Quét mã QR và xác nhận check-in người tham dự          |   N    |    N     |     Y     |   N   |
+| Send Notifications              | Gửi thông báo tới người tham dự của sự kiện             |   N    |    N     |     Y     |   Y   |
+| Approve Events                  | Duyệt hoặc từ chối sự kiện do organizer tạo             |   N    |    N     |     N     |   Y   |
+| Manage Organizers               | Tạo, xem, khoá hoặc xoá tài khoản organizer            |   N    |    N     |     N     |   Y   |
+| Manage Categories               | Thêm, sửa, xoá danh mục sự kiện                        |   N    |    N     |     N     |   Y   |
+| Configure Commission            | Cấu hình tỷ lệ hoa hồng hệ thống thu trên mỗi vé       |   N    |    N     |     N     |   Y   |
+| System Reports                  | Xem báo cáo doanh thu, tăng trưởng toàn hệ thống        |   N    |    N     |     N     |   Y   |
+
+---
+
+### Mô tả chi tiết từng vai trò
+
+#### PUBLIC (Khách chưa đăng nhập)
+- Có thể duyệt danh sách sự kiện và xem chi tiết sự kiện đã được duyệt.
+- Không thể thực hiện bất kỳ giao dịch nào (đặt vé, mua vé).
+- Cần đăng ký tài khoản và đăng nhập để thực hiện các thao tác khác.
+
+#### ATTENDEE (Người tham dự)
+- Tìm kiếm, lọc và xem chi tiết sự kiện.
+- Đặt chỗ (reserve) và thanh toán mua vé.
+- Xem vé điện tử, tải mã QR check-in.
+- Tra cứu lịch sử giao dịch và đơn hàng của bản thân.
+- Không được tạo sự kiện hoặc quản lý sự kiện của người khác.
+
+#### ORGANIZER (Nhà tổ chức)
+- Tạo, chỉnh sửa và xoá sự kiện do mình quản lý (phải qua duyệt của ADMIN trước khi công bố).
+- Xem danh sách người đăng ký và báo cáo doanh thu của từng sự kiện.
+- Thực hiện check-in người tham dự bằng cách quét mã QR tại sự kiện.
+- Gửi thông báo đến toàn bộ người đã đăng ký sự kiện của mình.
+- Không có quyền quản lý hệ thống, danh mục, hay tài khoản người dùng khác.
+
+#### ADMIN (Quản trị viên hệ thống)
+- Duyệt hoặc từ chối các sự kiện do organizer gửi lên.
+- Quản lý toàn bộ tài khoản organizer (tạo, khoá, xoá).
+- Thêm, sửa, xoá danh mục sự kiện trong hệ thống.
+- Cấu hình tỷ lệ hoa hồng áp dụng trên từng giao dịch bán vé.
+- Xem báo cáo tổng hợp về doanh thu, số lượng sự kiện, tăng trưởng người dùng toàn hệ thống.
+- Gửi thông báo hệ thống diện rộng đến các organizer hoặc nhóm người dùng.
