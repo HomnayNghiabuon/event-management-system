@@ -3,7 +3,7 @@ spring:
     name: event-management-server
 
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:eventdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    url: ${DB_URL:jdbc:h2:mem:eventdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL;NON_KEYWORDS=VALUE}
     driver-class-name: ${DB_DRIVER:org.h2.Driver}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
