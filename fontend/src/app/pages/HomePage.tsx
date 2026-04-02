@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
-import { Header } from './components/Header';
-import { HeroSearch } from './components/HeroSearch';
-import { CategoryTabs } from './components/CategoryTabs';
-import { EventGrid } from './components/EventGrid';
-import { Footer } from './components/Footer';
-import type { Event } from './components/EventCard';
+import { useState } from 'react';
+import { Header } from '../components/Header';
+import { HeroSearch } from '../components/HeroSearch';
+import { CategoryTabs } from '../components/CategoryTabs';
+import { EventGrid } from '../components/EventGrid';
+import { Footer } from '../components/Footer';
+import type { Event } from '../components/EventCard';
 
 // Mock event data
 const mockEvents: Event[] = [
@@ -118,7 +118,7 @@ const mockEvents: Event[] = [
   },
 ];
 
-export default function App() {
+export function HomePage() {
   const [selectedLocation, setSelectedLocation] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Live Concert');
