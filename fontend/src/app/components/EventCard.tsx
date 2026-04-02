@@ -1,4 +1,5 @@
 import { MapPin, Calendar } from 'lucide-react';
+import { Link } from 'react-router';
 
 export interface Event {
   id: number;
@@ -56,22 +57,34 @@ export function EventCard({ event }: EventCardProps) {
         {/* Action Buttons - Responsive Layout */}
         {/* Desktop/Tablet: Side by side */}
         <div className="hidden sm:flex gap-2">
-          <button className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm">
+          <Link
+            to={`/event/${event.id}`}
+            className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm text-center"
+          >
             View Details
-          </button>
-          <button className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm">
+          </Link>
+          <Link
+            to={`/event/${event.id}`}
+            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm text-center"
+          >
             Book Ticket
-          </button>
+          </Link>
         </div>
 
         {/* Mobile: Stacked vertically */}
         <div className="flex flex-col gap-2 sm:hidden">
-          <button className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
+          <Link
+            to={`/event/${event.id}`}
+            className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm text-center"
+          >
             Book Ticket
-          </button>
-          <button className="w-full px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm">
+          </Link>
+          <Link
+            to={`/event/${event.id}`}
+            className="w-full px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm text-center"
+          >
             View Details
-          </button>
+          </Link>
         </div>
       </div>
     </div>
