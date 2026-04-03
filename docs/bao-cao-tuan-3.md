@@ -4,7 +4,6 @@
 **Đề tài:** Quản Lý Sự Kiện
 **Nhóm trưởng:** Lê Hữu Lộc – 2251052072
 
----
 
 ## 1. Công việc đã hoàn thành
 
@@ -14,7 +13,6 @@
 | Nguyễn Xuân Khánh | 123457 | Viết Entity cho 10 bảng (Event, Ticket, Order, TicketType, TicketReservation, Notification, EmailLog, Category, Commission, OrderDetail) | [ddbdf35](https://github.com/HomnayNghiabuon/event-management-system/commit/ddbdf35) |
 | Lê Hữu Lộc | 2251052072 | Thiết kế kiến trúc hệ thống | — |
 
----
 
 ## 2. Tiến độ tổng thể
 
@@ -27,8 +25,17 @@
 | Backend Entity & cấu hình database | Done | 100% |
 
 **Tổng tiến độ: 90%**
+| Thiết kế database | Hoàn thành | 100% |
+| Viết tài liệu API | Hoàn thành | 100% |
+| Thiết kế kiến trúc hệ thống | Hoàn thành | 100% |
+| Backend Authentication API | Hoàn thành | 100% |
+| Backend Entity & cấu hình database | Hoàn thành | 100% |
+| Backend Event CRUD API + phân quyền | Chưa bắt đầu | 0% |
+| Backend Ticket/Reservation API | Chưa bắt đầu | 0% |
+| Frontend | Chưa bắt đầu | 0% |
 
----
+**Tổng tiến độ: 30%**
+
 
 ## 3. Kế hoạch tuần tới
 

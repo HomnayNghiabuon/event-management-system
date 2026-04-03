@@ -115,4 +115,3 @@
 | --- | --- | --- |
 | commission_id | INT | PK |
 | percent | DECIMAL(5,2) |  |
-| created_at | DATETIME |  |
