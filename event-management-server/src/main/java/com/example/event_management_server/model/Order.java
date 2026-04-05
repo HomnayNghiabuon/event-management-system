@@ -32,6 +32,10 @@ public class Order {
     @Column(name = "transaction_id")
     private String transactionId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id")
+    private TicketReservation ticketReservation;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
@@ -57,4 +61,7 @@ public class Order {
 
     public String getTransactionId() { return transactionId; }
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+
+    public TicketReservation getTicketReservation() { return ticketReservation; }
+    public void setTicketReservation(TicketReservation ticketReservation) { this.ticketReservation = ticketReservation; }
 }

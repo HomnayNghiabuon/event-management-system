@@ -32,19 +32,19 @@ public class TicketReservation {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String status; // PENDING, COMPLETED, EXPIRED
+    private ReservationStatus status;
 
     // ===== Lifecycle Callbacks =====
     @PrePersist
     protected void onCreate() {
         this.reservedAt = Instant.now();
-        // Mặc định giữ chỗ trong 10 phút nếu chưa set
         if (this.expiresAt == null) {
-            this.expiresAt = this.reservedAt.plusSeconds(600); 
+            this.expiresAt = this.reservedAt.plusSeconds(600);
         }
         if (this.status == null) {
-            this.status = "PENDING";
+            this.status = ReservationStatus.PENDING;
         }
     }
 
@@ -69,8 +69,12 @@ public class TicketReservation {
     public Instant getExpiresAt() { return expiresAt; }
     public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
+
+    public boolean isExpired() {
+        return Instant.now().isAfter(this.expiresAt);
+    }
 
     // ===== Builder Pattern =====
     public static final class ReservationBuilder {
@@ -79,14 +83,14 @@ public class TicketReservation {
         private TicketType ticketType;
         private Integer quantity;
         private Instant expiresAt;
-        private String status;
+        private ReservationStatus status;
 
         public ReservationBuilder reservationId(Integer reservationId) { this.reservationId = reservationId; return this; }
         public ReservationBuilder user(User user) { this.user = user; return this; }
         public ReservationBuilder ticketType(TicketType ticketType) { this.ticketType = ticketType; return this; }
         public ReservationBuilder quantity(Integer quantity) { this.quantity = quantity; return this; }
         public ReservationBuilder expiresAt(Instant expiresAt) { this.expiresAt = expiresAt; return this; }
-        public ReservationBuilder status(String status) { this.status = status; return this; }
+        public ReservationBuilder status(ReservationStatus status) { this.status = status; return this; }
 
         public TicketReservation build() {
             TicketReservation res = new TicketReservation();
