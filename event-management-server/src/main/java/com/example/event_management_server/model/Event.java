@@ -53,6 +53,20 @@ public class Event {
     @Column(name = "min_price", precision = 19, scale = 2)
     private BigDecimal minPrice;
 
+    @Builder.Default
+    @Column(name = "approval_status", length = 20)
+    private String approvalStatus = "PENDING"; // PENDING | APPROVED | REJECTED
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id")
     private User organizer;

@@ -37,4 +37,15 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
      * Kiểm tra sự kiện có thuộc về organizer không.
      */
     boolean existsByEventIdAndOrganizer_Id(Integer eventId, UUID organizerId);
+
+    /**
+     * Admin: lấy tất cả sự kiện, có thể lọc theo approvalStatus.
+     */
+    @Query("""
+            SELECT e FROM Event e
+            WHERE (:approvalStatus IS NULL OR e.approvalStatus = :approvalStatus)
+            """)
+    Page<Event> findByApprovalStatus(
+            @Param("approvalStatus") String approvalStatus,
+            Pageable pageable);
 }

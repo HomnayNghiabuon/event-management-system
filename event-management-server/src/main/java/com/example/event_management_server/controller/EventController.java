@@ -31,7 +31,7 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    // ─── PUBLIC ─────────────────────────────────────────────────────────────────
+    // PUBLIC
 
     /**
      * Tìm kiếm / lọc danh sách sự kiện đã publish.
@@ -58,7 +58,7 @@ public class EventController {
         return eventService.getEventById(eventId);
     }
 
-    // ─── ORGANIZER ───────────────────────────────────────────────────────────────
+    // ORGANIZER
 
     /**
      * Tạo sự kiện mới (kèm loại vé).
@@ -120,7 +120,7 @@ public class EventController {
         eventService.deleteEvent(eventId, user);
     }
 
-    // ─── ORGANIZER – Quản lý sự kiện của mình ────────────────────────────────────
+    // ORGANIZER - quan ly su kien cua minh
 
     /**
      * Lấy danh sách sự kiện do organizer hiện tại tạo.

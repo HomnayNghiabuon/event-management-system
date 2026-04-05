@@ -50,6 +50,7 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
+    // -> return a collection has type is subclass of GrantedAuthority
 
     @Override
     public String getUsername() {

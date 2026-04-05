@@ -38,7 +38,7 @@ public class EventService {
         this.ticketTypeRepository = ticketTypeRepository;
     }
 
-    // ─── PUBLIC ─────────────────────────────────────────────────────────────────
+    // PUBLIC
 
     /**
      * Tìm kiếm / lọc sự kiện đã publish (PUBLIC).
@@ -69,7 +69,7 @@ public class EventService {
         return EventResponse.from(event, ticketTypes);
     }
 
-    // ─── ORGANIZER ───────────────────────────────────────────────────────────────
+    // ORGANIZER
 
     /**
      * Tạo sự kiện mới (ORGANIZER).
@@ -173,7 +173,7 @@ public class EventService {
                 .map(EventSummaryResponse::from);
     }
 
-    // ─── PRIVATE ─────────────────────────────────────────────────────────────────
+    // private helpers
 
     private Event findEventOrThrow(Integer eventId) {
         return eventRepository.findById(eventId)
