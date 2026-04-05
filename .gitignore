@@ -1,3 +1,42 @@
+HELP.md
+target/
+
+### Environment (không commit thông tin nhạy cảm) ###
+.env
+.env.local
+.env.*.local
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
 ### AI Tools ###
 .claude/
 .cursor/
@@ -6,11 +45,6 @@
 .continue/
 *.ai-context
 CLAUDE.md
-
-### Environment ###
-.env
-.env.local
-.env.*.local
 
 ### OS ###
 .DS_Store
