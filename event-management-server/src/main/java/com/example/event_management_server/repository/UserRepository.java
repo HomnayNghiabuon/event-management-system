@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
 
+    long countByRole(Role role);
+
     /** Tìm danh sách Organizer, có thể filter theo keyword (tên hoặc email). */
     @Query("""
             SELECT u FROM User u

@@ -1,6 +1,7 @@
 package com.example.event_management_server.controller;
 
 import com.example.event_management_server.dto.*;
+import com.example.event_management_server.model.Commission;
 import com.example.event_management_server.model.User;
 import com.example.event_management_server.service.AdminService;
 import jakarta.validation.Valid;
@@ -10,6 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -113,5 +117,59 @@ public class AdminController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrganizer(@PathVariable UUID organizerId) {
         adminService.deleteOrganizer(organizerId);
+    }
+
+    /**
+     * Thống kê tổng quan hệ thống.
+     * GET /api/v1/admin/stats
+     */
+    @GetMapping("/stats")
+    public AdminService.DashboardStats getStats() {
+        return adminService.getDashboardStats();
+    }
+
+    // USER BLOCK / UNBLOCK
+
+    /**
+     * Khoá hoặc mở khoá một user.
+     * PATCH /api/v1/admin/users/{userId}/status?active=false
+     */
+    @PatchMapping("/users/{userId}/status")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setUserStatus(
+            @PathVariable UUID userId,
+            @RequestParam boolean active) {
+        adminService.setUserActive(userId, active);
+    }
+
+    // COMMISSION MANAGEMENT
+
+    /** GET /api/v1/admin/commissions */
+    @GetMapping("/commissions")
+    public List<Commission> getCommissions() {
+        return adminService.getAllCommissions();
+    }
+
+    /** GET /api/v1/admin/commissions/active */
+    @GetMapping("/commissions/active")
+    public Commission getActiveCommission() {
+        return adminService.getActiveCommission();
+    }
+
+    /** POST /api/v1/admin/commissions
+     *  Body: { "percent": 5.00, "effectiveFrom": "2025-07-01T00:00:00Z" }
+     */
+    @PostMapping("/commissions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Commission createCommission(@RequestBody CommissionRequest request) {
+        return adminService.createCommission(request.percent(), request.effectiveFrom());
+    }
+
+    /** PATCH /api/v1/admin/commissions/{commissionId} */
+    @PatchMapping("/commissions/{commissionId}")
+    public Commission updateCommission(
+            @PathVariable Integer commissionId,
+            @RequestBody CommissionRequest request) {
+        return adminService.updateCommission(commissionId, request.percent(), request.effectiveFrom(), request.isActive());
     }
 }

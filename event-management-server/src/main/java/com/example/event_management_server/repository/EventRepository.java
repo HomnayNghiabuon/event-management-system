@@ -21,11 +21,14 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
               AND (:categoryId IS NULL OR e.category.categoryId = :categoryId)
               AND (:location   IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :location, '%')))
               AND (:date       IS NULL OR e.eventDate = :date)
+              AND (:keyword    IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                                      OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """)
     Page<Event> findPublished(
             @Param("categoryId") Integer categoryId,
             @Param("location")   String location,
             @Param("date")       LocalDate date,
+            @Param("keyword")    String keyword,
             Pageable pageable);
 
     /**
@@ -48,4 +51,6 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     Page<Event> findByApprovalStatus(
             @Param("approvalStatus") String approvalStatus,
             Pageable pageable);
+
+    long countByApprovalStatus(String approvalStatus);
 }

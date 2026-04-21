@@ -1,7 +1,13 @@
 package com.example.event_management_server.controller;
 
 import com.example.event_management_server.dto.*;
+import com.example.event_management_server.exception.NotFoundException;
+import com.example.event_management_server.model.Event;
 import com.example.event_management_server.model.User;
+import com.example.event_management_server.repository.EventRepository;
+import com.example.event_management_server.repository.OrderRepository;
+import com.example.event_management_server.repository.TicketRepository;
+import com.example.event_management_server.repository.TicketTypeRepository;
 import com.example.event_management_server.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -13,22 +19,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
-/**
- * REST Controller quản lý sự kiện.
- *
- * Phân quyền theo role:
- *   PUBLIC     → GET /events, GET /events/{id}
- *   ORGANIZER  → POST, PUT, PATCH /events
- *   ORGANIZER hoặc ADMIN → DELETE /events/{id}
- */
 @RestController
 @RequestMapping("/api/v1/events")
 public class EventController {
 
     private final EventService eventService;
+    private final EventRepository eventRepository;
+    private final OrderRepository orderRepository;
+    private final TicketRepository ticketRepository;
+    private final TicketTypeRepository ticketTypeRepository;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService,
+                           EventRepository eventRepository,
+                           OrderRepository orderRepository,
+                           TicketRepository ticketRepository,
+                           TicketTypeRepository ticketTypeRepository) {
         this.eventService = eventService;
+        this.eventRepository = eventRepository;
+        this.orderRepository = orderRepository;
+        this.ticketRepository = ticketRepository;
+        this.ticketTypeRepository = ticketTypeRepository;
     }
 
     // PUBLIC
@@ -42,11 +52,12 @@ public class EventController {
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false)    String sort) {
 
-        return eventService.listPublishedEvents(categoryId, location, date, page, size, sort);
+        return eventService.listPublishedEvents(categoryId, location, date, search, page, size, sort);
     }
 
     /**
@@ -135,5 +146,42 @@ public class EventController {
             @AuthenticationPrincipal User organizer) {
 
         return eventService.getMyEvents(organizer, page, size);
+    }
+
+    /**
+     * Thống kê sự kiện theo ID.
+     * GET /api/v1/events/{eventId}/stats
+     * Role: ORGANIZER (sự kiện của mình) hoặc ADMIN
+     */
+    @GetMapping("/{eventId}/stats")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public EventStatsResponse getEventStats(
+            @PathVariable Integer eventId,
+            @AuthenticationPrincipal User user) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !event.getOrganizer().getId().equals(user.getId())) {
+            throw new com.example.event_management_server.exception.BadRequestException("Access denied");
+        }
+
+        long ticketsSold      = ticketRepository.countByEventId(eventId);
+        long ticketsAvailable = ticketTypeRepository.sumAvailableQuantityByEventId(eventId);
+        java.math.BigDecimal revenue = orderRepository.sumRevenueByEventId(eventId);
+        long totalOrders      = orderRepository.countPaidOrdersByEventId(eventId);
+        long checkedIn        = ticketRepository.countCheckedInByEventId(eventId);
+
+        return new EventStatsResponse(
+                eventId,
+                event.getTitle(),
+                ticketsSold,
+                ticketsAvailable,
+                revenue,
+                totalOrders,
+                checkedIn
+        );
     }
 }

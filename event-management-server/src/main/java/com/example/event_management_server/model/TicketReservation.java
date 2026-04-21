@@ -74,10 +74,6 @@ public class TicketReservation {
         return Instant.now().isAfter(this.expiresAt);
     }
 
-    public boolean isExpired() {
-        return Instant.now().isAfter(this.expiresAt);
-    }
-
     // ===== Builder =====
     public static final class ReservationBuilder {
         private Integer reservationId;

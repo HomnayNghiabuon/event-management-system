@@ -40,6 +40,9 @@ public class User implements UserDetails {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -74,7 +77,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return active;
     }
 
     // Getters and Setters
@@ -101,4 +104,7 @@ public class User implements UserDetails {
     public void setOrganizationName(String organizationName) { this.organizationName = organizationName; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

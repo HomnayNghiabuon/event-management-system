@@ -45,7 +45,7 @@ public class EventService {
      */
     @Transactional(readOnly = true)
     public Page<EventSummaryResponse> listPublishedEvents(
-            Integer categoryId, String location, LocalDate date,
+            Integer categoryId, String location, LocalDate date, String keyword,
             int page, int size, String sort) {
 
         Sort sortBy = switch (sort == null ? "" : sort) {
@@ -54,8 +54,9 @@ public class EventService {
             default         -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
 
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
         Pageable pageable = PageRequest.of(page, size, sortBy);
-        return eventRepository.findPublished(categoryId, location, date, pageable)
+        return eventRepository.findPublished(categoryId, location, date, kw, pageable)
                 .map(EventSummaryResponse::from);
     }
 
@@ -133,10 +134,16 @@ public class EventService {
 
     /**
      * Publish / Unpublish sự kiện (ORGANIZER – chỉ sự kiện của mình).
+     * Chỉ sự kiện có approvalStatus = APPROVED mới được publish.
      */
     public EventResponse publishEvent(Integer eventId, Boolean publish, User organizer) {
         Event event = findEventOrThrow(eventId);
         checkOwnership(event, organizer.getId());
+
+        if (Boolean.TRUE.equals(publish) && !"APPROVED".equals(event.getApprovalStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Sự kiện phải được Admin duyệt (APPROVED) trước khi publish.");
+        }
 
         event.setStatus(Boolean.TRUE.equals(publish) ? "PUBLISHED" : "DRAFT");
         Event saved = eventRepository.save(event);

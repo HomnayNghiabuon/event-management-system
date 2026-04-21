@@ -15,11 +15,7 @@ INSERT INTO categories (category_id, name, description, created_at) VALUES
 INSERT INTO commissions (commission_id, percent, effective_from, is_active, created_at) VALUES
 (1, 5.00, NOW(), true, NOW());
 
--- ── USERS ───────────────────────────────────────────────────
--- Password mặc định cho tất cả tài khoản test: "123456"
--- Hash BCrypt: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
-
-INSERT INTO users (id, full_name, email, password, role, phone, organization_name, created_at) VALUES
-(RANDOM_UUID(), 'Admin System',         'admin@eventms.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN',     NULL,         NULL,                  NOW()),
-(RANDOM_UUID(), 'Nguyen Van Organizer', 'organizer@eventms.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ORGANIZER', '0901234567', 'Cong ty Su Kien ABC', NOW()),
-(RANDOM_UUID(), 'Tran Thi Attendee',    'attendee@eventms.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ATTENDEE',  NULL,         NULL,                  NOW());
+-- ── USERS được tạo bởi DataInitializer (password hash đúng) ──
+-- admin@eventms.com  / 123456 → ADMIN
+-- organizer@eventms.com / 123456 → ORGANIZER
+-- attendee@eventms.com  / 123456 → ATTENDEE

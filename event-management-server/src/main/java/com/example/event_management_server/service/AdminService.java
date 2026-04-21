@@ -1,11 +1,13 @@
 package com.example.event_management_server.service;
 
 import com.example.event_management_server.dto.*;
+import com.example.event_management_server.model.Commission;
 import com.example.event_management_server.model.Event;
 import com.example.event_management_server.model.Role;
 import com.example.event_management_server.model.User;
+import com.example.event_management_server.repository.CommissionRepository;
 import com.example.event_management_server.repository.EventRepository;
-import com.example.event_management_server.repository.TicketTypeRepository;
+import com.example.event_management_server.repository.OrderRepository;
 import com.example.event_management_server.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,18 +28,34 @@ public class AdminService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final TicketTypeRepository ticketTypeRepository;
+    private final OrderRepository orderRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
+    private final CommissionRepository commissionRepository;
 
     public AdminService(EventRepository eventRepository,
                         UserRepository userRepository,
-                        TicketTypeRepository ticketTypeRepository,
-                        PasswordEncoder passwordEncoder) {
+                        OrderRepository orderRepository,
+                        PasswordEncoder passwordEncoder,
+                        NotificationService notificationService,
+                        CommissionRepository commissionRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
-        this.ticketTypeRepository = ticketTypeRepository;
+        this.orderRepository = orderRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationService = notificationService;
+        this.commissionRepository = commissionRepository;
     }
+
+    public record DashboardStats(
+            long totalEvents,
+            long pendingEvents,
+            long approvedEvents,
+            long rejectedEvents,
+            long totalOrganizers,
+            long totalAttendees,
+            long totalOrders
+    ) {}
 
     // EVENT APPROVAL
 
@@ -83,8 +101,23 @@ public class AdminService {
 
         event.setReviewedBy(admin);
         event.setReviewedAt(Instant.now());
+        Event saved = eventRepository.save(event);
 
-        return AdminEventSummaryResponse.from(eventRepository.save(event));
+        if (event.getOrganizer() != null) {
+            if ("APPROVE".equalsIgnoreCase(action)) {
+                notificationService.send(event.getOrganizer(),
+                        "Sự kiện đã được duyệt",
+                        String.format("Sự kiện \"%s\" đã được Admin phê duyệt. Bạn có thể publish ngay bây giờ.", event.getTitle()),
+                        "EVENT_APPROVED");
+            } else {
+                notificationService.send(event.getOrganizer(),
+                        "Sự kiện bị từ chối",
+                        String.format("Sự kiện \"%s\" bị từ chối. Lý do: %s", event.getTitle(), request.reason()),
+                        "EVENT_REJECTED");
+            }
+        }
+
+        return AdminEventSummaryResponse.from(saved);
     }
 
     // ORGANIZER MANAGEMENT
@@ -169,6 +202,61 @@ public class AdminService {
     public void deleteOrganizer(UUID organizerId) {
         User user = findOrganizerOrThrow(organizerId);
         userRepository.delete(user);
+    }
+
+    // DASHBOARD STATS
+
+    @Transactional(readOnly = true)
+    public DashboardStats getDashboardStats() {
+        return new DashboardStats(
+                eventRepository.count(),
+                eventRepository.countByApprovalStatus("PENDING"),
+                eventRepository.countByApprovalStatus("APPROVED"),
+                eventRepository.countByApprovalStatus("REJECTED"),
+                userRepository.countByRole(Role.ORGANIZER),
+                userRepository.countByRole(Role.ATTENDEE),
+                orderRepository.count()
+        );
+    }
+
+    // USER BLOCK / UNBLOCK
+
+    public void setUserActive(UUID userId, boolean active) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User không tồn tại: " + userId));
+        user.setActive(active);
+        userRepository.save(user);
+    }
+
+    // COMMISSION MANAGEMENT
+
+    @Transactional(readOnly = true)
+    public java.util.List<Commission> getAllCommissions() {
+        return commissionRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Commission getActiveCommission() {
+        return commissionRepository.findFirstByIsActiveTrueOrderByEffectiveFromDesc()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không có commission đang active"));
+    }
+
+    public Commission createCommission(java.math.BigDecimal percent, java.time.Instant effectiveFrom) {
+        Commission c = new Commission();
+        c.setPercent(percent);
+        c.setEffectiveFrom(effectiveFrom != null ? effectiveFrom : java.time.Instant.now());
+        c.setIsActive(true);
+        return commissionRepository.save(c);
+    }
+
+    public Commission updateCommission(Integer commissionId, java.math.BigDecimal percent,
+                                       java.time.Instant effectiveFrom, Boolean isActive) {
+        Commission c = commissionRepository.findById(commissionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Commission không tồn tại: " + commissionId));
+        if (percent != null) c.setPercent(percent);
+        if (effectiveFrom != null) c.setEffectiveFrom(effectiveFrom);
+        if (isActive != null) c.setIsActive(isActive);
+        return commissionRepository.save(c);
     }
 
     // private helpers
