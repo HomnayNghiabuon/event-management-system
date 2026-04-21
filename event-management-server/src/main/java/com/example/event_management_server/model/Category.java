@@ -27,6 +27,13 @@ public class Category {
 
     public Category() {}
 
+    public Category(Integer categoryId, String name, String description, Instant createdAt) {
+        this.categoryId = categoryId;
+        this.name = name;
+        this.description = description;
+        this.createdAt = createdAt;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
@@ -42,4 +49,5 @@ public class Category {
     public void setDescription(String description) { this.description = description; }
 
     public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

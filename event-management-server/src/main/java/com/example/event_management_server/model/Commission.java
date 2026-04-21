@@ -16,7 +16,7 @@ public class Commission {
     @Column(name = "percent", precision = 5, scale = 2)
     private BigDecimal percent;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @Column(name = "effective_from")
@@ -24,6 +24,19 @@ public class Commission {
 
     @Column(name = "is_active")
     private Boolean isActive;
+
+    // Constructor rỗng (thay @NoArgsConstructor)
+    public Commission() {}
+
+    // Constructor full (thay @AllArgsConstructor)
+    public Commission(Integer commissionId, BigDecimal percent, Instant createdAt,
+                      Instant effectiveFrom, Boolean isActive) {
+        this.commissionId = commissionId;
+        this.percent = percent;
+        this.createdAt = createdAt;
+        this.effectiveFrom = effectiveFrom;
+        this.isActive = isActive;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -33,19 +46,42 @@ public class Commission {
         }
     }
 
-    // ===== Getter Setter =====
-    public Integer getCommissionId() { return commissionId; }
-    public void setCommissionId(Integer commissionId) { this.commissionId = commissionId; }
+    // ===== Getter =====
+    public Integer getCommissionId() {
+        return commissionId;
+    }
 
-    public BigDecimal getPercent() { return percent; }
-    public void setPercent(BigDecimal percent) { this.percent = percent; }
+    public BigDecimal getPercent() {
+        return percent;
+    }
 
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 
-    public Instant getEffectiveFrom() { return effectiveFrom; }
-    public void setEffectiveFrom(Instant effectiveFrom) { this.effectiveFrom = effectiveFrom; }
+    public Instant getEffectiveFrom() {
+        return effectiveFrom;
+    }
 
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    // ===== Setter =====
+    public void setCommissionId(Integer commissionId) {
+        this.commissionId = commissionId;
+    }
+
+    public void setPercent(BigDecimal percent) {
+        this.percent = percent;
+    }
+
+    public void setEffectiveFrom(Instant effectiveFrom) {
+        this.effectiveFrom = effectiveFrom;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
 }

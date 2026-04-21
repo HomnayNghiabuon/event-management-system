@@ -3,6 +3,7 @@ package com.example.event_management_server.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
@@ -23,7 +24,7 @@ public class Order {
     @Column(name = "payment_status")
     private String paymentStatus;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @Column(name = "payment_method")
@@ -36,32 +37,34 @@ public class Order {
     @JoinColumn(name = "reservation_id")
     private TicketReservation ticketReservation;
 
+    @Transient
+    private LocalDateTime orderDate;
+
+    public Order() {}
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
     }
 
-    // ===== Getter Setter =====
+    // ===== Getter =====
     public Integer getOrderId() { return orderId; }
-    public void setOrderId(Integer orderId) { this.orderId = orderId; }
-
     public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
     public BigDecimal getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
-
     public String getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
-
     public Instant getCreatedAt() { return createdAt; }
-
     public String getPaymentMethod() { return paymentMethod; }
-    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
-
     public String getTransactionId() { return transactionId; }
-    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
-
     public TicketReservation getTicketReservation() { return ticketReservation; }
+    public LocalDateTime getOrderDate() { return orderDate; }
+
+    // ===== Setter =====
+    public void setOrderId(Integer orderId) { this.orderId = orderId; }
+    public void setUser(User user) { this.user = user; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
     public void setTicketReservation(TicketReservation ticketReservation) { this.ticketReservation = ticketReservation; }
+    public void setOrderDate(LocalDateTime orderDate) { this.orderDate = orderDate; }
 }

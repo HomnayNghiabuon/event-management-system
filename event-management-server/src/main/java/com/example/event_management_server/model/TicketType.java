@@ -46,6 +46,8 @@ public class TicketType {
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
+    public Integer getAvailableQuantity() { return quantity; }
+
     // ===== Builder Pattern =====
     public static final class TicketTypeBuilder {
         private Integer ticketTypeId;

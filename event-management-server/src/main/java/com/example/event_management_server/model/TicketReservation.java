@@ -36,7 +36,6 @@ public class TicketReservation {
     @Column(length = 20)
     private ReservationStatus status;
 
-    // ===== Lifecycle Callbacks =====
     @PrePersist
     protected void onCreate() {
         this.reservedAt = Instant.now();
@@ -48,10 +47,9 @@ public class TicketReservation {
         }
     }
 
-    // ===== Constructors =====
     public TicketReservation() {}
 
-    // ===== Getters & Setters =====
+    // ===== Getter Setter =====
     public Integer getReservationId() { return reservationId; }
     public void setReservationId(Integer reservationId) { this.reservationId = reservationId; }
 
@@ -76,7 +74,11 @@ public class TicketReservation {
         return Instant.now().isAfter(this.expiresAt);
     }
 
-    // ===== Builder Pattern =====
+    public boolean isExpired() {
+        return Instant.now().isAfter(this.expiresAt);
+    }
+
+    // ===== Builder =====
     public static final class ReservationBuilder {
         private Integer reservationId;
         private User user;
