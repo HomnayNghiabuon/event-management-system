@@ -45,7 +45,7 @@ export function EventDetail({
             className="inline-flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors duration-300"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Events</span>
+            <span className="font-medium">Quay lại danh sách</span>
           </Link>
         </div>
       </div>
@@ -70,8 +70,8 @@ export function EventDetail({
 
             {/* Event Info */}
             <div className="bg-white rounded-xl p-6 shadow-md space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Event Information</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Thông tin sự kiện</h2>
+
               <div className="space-y-3">
                 {/* Date */}
                 <div className="flex items-center gap-3 text-gray-700">
@@ -79,7 +79,7 @@ export function EventDetail({
                     <Calendar className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 font-medium">Date</p>
+                    <p className="text-sm text-gray-500 font-medium">Ngày</p>
                     <p className="text-base font-semibold">{date}</p>
                   </div>
                 </div>
@@ -90,7 +90,7 @@ export function EventDetail({
                     <Clock className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 font-medium">Time</p>
+                    <p className="text-sm text-gray-500 font-medium">Thời gian</p>
                     <p className="text-base font-semibold">{startTime} - {endTime}</p>
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export function EventDetail({
                     <MapPin className="w-5 h-5 text-pink-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 font-medium">Location</p>
+                    <p className="text-sm text-gray-500 font-medium">Địa điểm</p>
                     <p className="text-base font-semibold">{location}</p>
                   </div>
                 </div>
@@ -110,7 +110,7 @@ export function EventDetail({
 
             {/* Event Description */}
             <div className="bg-white rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About This Event</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Giới thiệu sự kiện</h2>
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                 {description}
               </p>
@@ -118,7 +118,7 @@ export function EventDetail({
 
             {/* Ticket Types - Mobile/Tablet View */}
             <div className="lg:hidden bg-white rounded-xl p-6 shadow-md">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Available Tickets</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Loại vé có sẵn</h2>
               <div className="space-y-4">
                 {ticketTypes.map((ticket) => (
                   <div
@@ -128,7 +128,7 @@ export function EventDetail({
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-gray-900">{ticket.name}</h3>
                       <p className="text-lg font-bold text-purple-600">
-                        ${ticket.price.toLocaleString()}
+                        {ticket.price.toLocaleString('vi-VN')} VND
                       </p>
                     </div>
                     <p className="text-sm text-gray-600">{ticket.description}</p>
@@ -141,20 +141,20 @@ export function EventDetail({
           {/* Right Column - Ticket Booking Panel (Desktop Only) */}
           <div className="hidden lg:block">
             <div className="sticky top-24 bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Book Your Ticket</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Đặt vé ngay</h2>
+
               {/* Lowest Price Highlight */}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 mb-6 border border-purple-200">
-                <p className="text-sm text-gray-600 mb-1">Starting from</p>
+                <p className="text-sm text-gray-600 mb-1">Giá từ</p>
                 <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  ${lowestPrice.toLocaleString()}
+                  {lowestPrice.toLocaleString('vi-VN')} VND
                 </p>
               </div>
 
               {/* Ticket Types */}
               <div className="space-y-3 mb-6">
                 <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Available Tickets
+                  Loại vé có sẵn
                 </h3>
                 {ticketTypes.map((ticket) => (
                   <div
@@ -164,7 +164,7 @@ export function EventDetail({
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-semibold text-gray-900 text-sm">{ticket.name}</h4>
                       <p className="text-base font-bold text-purple-600">
-                        ${ticket.price.toLocaleString()}
+                        {ticket.price.toLocaleString('vi-VN')} VND
                       </p>
                     </div>
                     <p className="text-xs text-gray-600">{ticket.description}</p>
@@ -178,7 +178,7 @@ export function EventDetail({
                 className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold text-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <TicketIcon className="w-5 h-5" />
-                Book Ticket
+                Đặt vé ngay
               </button>
             </div>
           </div>
@@ -189,9 +189,9 @@ export function EventDetail({
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl p-4 z-40">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs text-gray-500">Starting from</p>
+            <p className="text-xs text-gray-500">Giá từ</p>
             <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              ${lowestPrice.toLocaleString()}
+              {lowestPrice.toLocaleString('vi-VN')} VND
             </p>
           </div>
           <button
@@ -199,7 +199,7 @@ export function EventDetail({
             className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-xl transition-all duration-300 flex items-center gap-2"
           >
             <TicketIcon className="w-5 h-5" />
-            Book Ticket
+            Đặt vé
           </button>
         </div>
       </div>

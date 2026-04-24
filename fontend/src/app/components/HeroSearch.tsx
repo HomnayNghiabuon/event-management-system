@@ -37,10 +37,10 @@ export function HeroSearch({
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-10">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Find Your Event
+            Tìm Sự Kiện Của Bạn
           </h1>
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover amazing concerts, workshops, and fan meetings near you
+            Khám phá các buổi hòa nhạc, workshop và fan meeting tuyệt vời gần bạn
           </p>
         </div>
 
@@ -56,11 +56,11 @@ export function HeroSearch({
                 onChange={(e) => setSelectedLocation(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all cursor-pointer appearance-none text-gray-700"
               >
-                <option value="">All Locations</option>
-                <option value="Ho Chi Minh City">Ho Chi Minh City</option>
-                <option value="Hanoi">Hanoi</option>
-                <option value="Da Nang">Da Nang</option>
-                <option value="Can Tho">Can Tho</option>
+                <option value="">Tất cả địa điểm</option>
+                <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                <option value="Hà Nội">Hà Nội</option>
+                <option value="Đà Nẵng">Đà Nẵng</option>
+                <option value="Cần Thơ">Cần Thơ</option>
                 <option value="Nha Trang">Nha Trang</option>
               </select>
             </div>
@@ -70,7 +70,7 @@ export function HeroSearch({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search events..."
+                placeholder="Tìm kiếm sự kiện..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -83,7 +83,7 @@ export function HeroSearch({
               onClick={handleSearch}
               className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 font-medium whitespace-nowrap"
             >
-              Search
+              Tìm kiếm
             </button>
           </div>
 
@@ -97,11 +97,11 @@ export function HeroSearch({
                 onChange={(e) => setSelectedLocation(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all cursor-pointer appearance-none text-gray-700"
               >
-                <option value="">All Locations</option>
-                <option value="Ho Chi Minh City">Ho Chi Minh City</option>
-                <option value="Hanoi">Hanoi</option>
-                <option value="Da Nang">Da Nang</option>
-                <option value="Can Tho">Can Tho</option>
+                <option value="">Tất cả địa điểm</option>
+                <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                <option value="Hà Nội">Hà Nội</option>
+                <option value="Đà Nẵng">Đà Nẵng</option>
+                <option value="Cần Thơ">Cần Thơ</option>
                 <option value="Nha Trang">Nha Trang</option>
               </select>
             </div>
@@ -111,7 +111,7 @@ export function HeroSearch({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search events..."
+                placeholder="Tìm kiếm sự kiện..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -124,7 +124,7 @@ export function HeroSearch({
               onClick={handleSearch}
               className="w-full px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-xl transition-all duration-300 font-medium"
             >
-              Search
+              Tìm kiếm
             </button>
           </div>
         </div>

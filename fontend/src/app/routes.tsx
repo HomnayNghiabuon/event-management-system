@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router';
 import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { TicketDetailPage } from './pages/TicketDetailPage';
+import { OrganizerDashboard } from './pages/OrganizerDashboard';
 
 export const router = createBrowserRouter([
   {
@@ -15,5 +16,9 @@ export const router = createBrowserRouter([
   {
     path: '/ticket-detail',
     Component: TicketDetailPage,
+  },
+  {
+    path: '/organizer-dashboard',
+    Component: OrganizerDashboard,
   },
 ]);

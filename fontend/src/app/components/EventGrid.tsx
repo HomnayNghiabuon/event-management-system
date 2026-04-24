@@ -8,7 +8,7 @@ export function EventGrid({ events }: EventGridProps) {
   if (events.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 text-base sm:text-lg">No events found. Try adjusting your search or filters.</p>
+        <p className="text-gray-500 text-base sm:text-lg">Không tìm thấy sự kiện nào. Vui lòng thử điều chỉnh tìm kiếm hoặc bộ lọc.</p>
       </div>
     );
   }

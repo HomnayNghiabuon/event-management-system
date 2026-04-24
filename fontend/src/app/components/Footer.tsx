@@ -22,7 +22,7 @@ export function Footer() {
               <span className="font-semibold text-xl">BuyTicket</span>
             </div>
             <p className="text-gray-400 mb-6 text-sm">
-              Your gateway to amazing events. Book tickets for concerts, workshops, and fan meetings all in one place.
+              Cổng thông tin sự kiện hàng đầu. Đặt vé cho các buổi hòa nhạc, workshop và fan meeting tại một nơi.
             </p>
             
             {/* Social Media Icons */}
@@ -70,13 +70,13 @@ export function Footer() {
 
           {/* Contact Information */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Contact Us</h4>
+            <h4 className="font-semibold text-lg mb-4">Liên hệ</h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-gray-400 mb-1">Head Office</p>
-                  <p className="text-gray-200 text-sm">123 Nguyen Hue, District 1, Ho Chi Minh City, Vietnam</p>
+                  <p className="text-sm text-gray-400 mb-1">Trụ sở chính</p>
+                  <p className="text-gray-200 text-sm">123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -98,25 +98,25 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
+            <h4 className="font-semibold text-lg mb-4">Liên kết nhanh</h4>
             <div className="space-y-3">
               <button
                 onClick={() => scrollToSection('search-section')}
                 className="block text-gray-400 hover:text-purple-400 transition-colors text-sm"
               >
-                Search Events
+                Tìm kiếm sự kiện
               </button>
               <button
                 onClick={() => scrollToSection('events-section')}
                 className="block text-gray-400 hover:text-purple-400 transition-colors text-sm"
               >
-                Ticket Info
+                Thông tin vé
               </button>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="block text-gray-400 hover:text-purple-400 transition-colors text-sm"
               >
-                My Tickets
+                Vé của tôi
               </button>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function Footer() {
               <span className="font-semibold text-xl">BuyTicket</span>
             </div>
             <p className="text-gray-400 text-sm mb-4">
-              Your gateway to amazing events
+              Cổng thông tin sự kiện hàng đầu
             </p>
           </div>
 
@@ -188,7 +188,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-700 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-400 text-xs sm:text-sm">
-          <p>&copy; 2026 BuyTicket. All rights reserved.</p>
+          <p>&copy; 2026 BuyTicket. Bảo lưu mọi quyền.</p>
         </div>
       </div>
     </footer>

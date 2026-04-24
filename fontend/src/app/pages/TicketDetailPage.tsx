@@ -9,21 +9,21 @@ const mockTickets = {
   '123456789012': [
     {
       id: 'TKT001',
-      eventName: 'Summer Music Festival 2026',
+      eventName: 'Lễ Hội Âm Nhạc Mùa Hè 2026',
       eventDate: '2026-06-15',
       eventTime: '18:00 - 23:00',
-      location: 'National Stadium, Ho Chi Minh City',
+      location: 'Sân Vận Động Quốc Gia, TP. Hồ Chí Minh',
       ticketType: 'VIP',
       price: 500000,
       status: 'active',
     },
     {
       id: 'TKT002',
-      eventName: 'Tech Workshop: AI & Machine Learning',
+      eventName: 'Hội Thảo Công Nghệ: AI & Machine Learning',
       eventDate: '2026-05-20',
       eventTime: '09:00 - 17:00',
-      location: 'Innovation Hub, District 1',
-      ticketType: 'Regular',
+      location: 'Trung Tâm Đổi Mới, Quận 1',
+      ticketType: 'Thường',
       price: 200000,
       status: 'used',
     },
@@ -31,10 +31,10 @@ const mockTickets = {
   '987654321098': [
     {
       id: 'TKT003',
-      eventName: 'K-Pop Fan Meeting 2026',
+      eventName: 'Họp Fan K-Pop 2026',
       eventDate: '2026-07-10',
       eventTime: '19:00 - 22:00',
-      location: 'Convention Center, Hanoi',
+      location: 'Trung Tâm Hội Nghị, Hà Nội',
       ticketType: 'VIP',
       price: 800000,
       status: 'cancelled',
@@ -67,12 +67,12 @@ export function TicketDetailPage() {
 
     // Validate CCCD
     if (!cccd) {
-      setError('Please enter your CCCD number');
+      setError('Vui lòng nhập số CCCD của bạn');
       return;
     }
 
     if (!/^\d{12}$/.test(cccd)) {
-      setError('CCCD must be exactly 12 digits');
+      setError('CCCD phải bao gồm đúng 12 chữ số');
       return;
     }
 
@@ -98,13 +98,13 @@ export function TicketDetailPage() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
-        return 'Active';
+        return 'Còn hiệu lực';
       case 'used':
-        return 'Used';
+        return 'Đã sử dụng';
       case 'cancelled':
-        return 'Cancelled';
+        return 'Đã hủy';
       default:
-        return 'Unknown';
+        return 'Không rõ';
     }
   };
 
@@ -120,11 +120,38 @@ export function TicketDetailPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
                 <Search className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Your Ticket</h1>
-              <p className="text-gray-600">Enter your CCCD number to view your tickets</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Tìm Vé Của Bạn</h1>
+              <p className="text-gray-600">Nhập số CCCD của bạn để xem vé</p>
             </div>
 
             <div className="max-w-md mx-auto">
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800">
+                <p className="font-semibold mb-2 flex items-center gap-2">
+                  <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px]">i</span>
+                  Thông tin CCCD Demo:
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-center justify-between bg-white/60 p-2 rounded">
+                    <span><span className="font-mono font-bold text-blue-900">123456789012</span> (Có vé hợp lệ)</span>
+                    <button 
+                      onClick={() => { setCccd('123456789012'); setError(''); }}
+                      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors font-medium"
+                    >
+                      Dùng
+                    </button>
+                  </li>
+                  <li className="flex items-center justify-between bg-white/60 p-2 rounded">
+                    <span><span className="font-mono font-bold text-blue-900">987654321098</span> (Vé đã hủy)</span>
+                    <button 
+                      onClick={() => { setCccd('987654321098'); setError(''); }}
+                      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors font-medium"
+                    >
+                      Dùng
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
               <div className="space-y-4">
                 <div>
                   <input
@@ -139,7 +166,7 @@ export function TicketDetailPage() {
                         handleSearch();
                       }
                     }}
-                    placeholder="Enter your ID number (CCCD)"
+                    placeholder="Nhập số CMND/CCCD"
                     maxLength={12}
                     className={`w-full px-4 py-3 rounded-lg border ${
                       error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
@@ -157,7 +184,7 @@ export function TicketDetailPage() {
                   onClick={handleSearch}
                   className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium"
                 >
-                  Search Ticket
+                  Tìm vé
                 </button>
               </div>
             </div>
@@ -169,15 +196,15 @@ export function TicketDetailPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                 <TicketIcon className="w-8 h-8 text-gray-400" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">No Tickets Found</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Không Tìm Thấy Vé</h2>
               <p className="text-gray-600 mb-6">
-                You have not purchased any tickets. Please buy a ticket first.
+                Bạn chưa mua bất kỳ vé nào. Vui lòng mua vé trước.
               </p>
               <Link
                 to="/"
                 className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium"
               >
-                Buy Ticket
+                Mua vé
               </Link>
             </div>
           )}
@@ -185,7 +212,7 @@ export function TicketDetailPage() {
           {/* Ticket List */}
           {hasSearched && tickets && tickets.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Tickets</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Vé Của Bạn</h2>
               {tickets.map((ticket) => (
                 <div
                   key={ticket.id}
@@ -205,8 +232,8 @@ export function TicketDetailPage() {
                       </div>
                       <div className="space-y-2 text-gray-600">
                         <p className="flex items-center gap-2">
-                          <span className="font-medium">Date:</span>
-                          {new Date(ticket.eventDate).toLocaleDateString('en-US', {
+                          <span className="font-medium">Ngày:</span>
+                          {new Date(ticket.eventDate).toLocaleDateString('vi-VN', {
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',
@@ -214,11 +241,11 @@ export function TicketDetailPage() {
                           })}
                         </p>
                         <p className="flex items-center gap-2">
-                          <span className="font-medium">Time:</span>
+                          <span className="font-medium">Thời gian:</span>
                           {ticket.eventTime}
                         </p>
                         <p className="flex items-center gap-2">
-                          <span className="font-medium">Location:</span>
+                          <span className="font-medium">Địa điểm:</span>
                           {ticket.location}
                         </p>
                         <div className="flex items-center gap-4 pt-2">
@@ -235,7 +262,7 @@ export function TicketDetailPage() {
                       onClick={() => setSelectedTicket(ticket)}
                       className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium whitespace-nowrap"
                     >
-                      View Ticket Detail
+                      Xem chi tiết vé
                     </button>
                   </div>
                 </div>
@@ -252,7 +279,7 @@ export function TicketDetailPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Ticket Details</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Chi Tiết Vé</h2>
               <button
                 onClick={() => setSelectedTicket(null)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -266,15 +293,15 @@ export function TicketDetailPage() {
                 {/* Left: Ticket Information */}
                 <div className="flex-1 space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Event Name</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Tên Sự Kiện</h3>
                     <p className="text-lg font-semibold text-gray-900">{selectedTicket.eventName}</p>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Event Time</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Thời Gian Sự Kiện</h3>
                     <p className="text-gray-900">{selectedTicket.eventTime}</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(selectedTicket.eventDate).toLocaleDateString('en-US', {
+                      {new Date(selectedTicket.eventDate).toLocaleDateString('vi-VN', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -284,26 +311,26 @@ export function TicketDetailPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Location</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Địa điểm</h3>
                     <p className="text-gray-900">{selectedTicket.location}</p>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Ticket Type</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Loại Vé</h3>
                     <span className="inline-block px-4 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium">
                       {selectedTicket.ticketType}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Ticket Price</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Giá Vé</h3>
                     <p className="text-xl font-bold text-gray-900">
                       {selectedTicket.price.toLocaleString('vi-VN')} VND
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Ticket Status</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Trạng Thái Vé</h3>
                     <span
                       className={`inline-block px-4 py-2 rounded-lg font-medium border ${getStatusColor(
                         selectedTicket.status
@@ -322,7 +349,7 @@ export function TicketDetailPage() {
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 text-center">
-                    Scan this QR code at the event entrance
+                    Quét mã QR này tại cổng vào sự kiện
                   </p>
                   <p className="text-xs text-gray-500 mt-2 font-mono">ID: {selectedTicket.id}</p>
                 </div>
@@ -331,21 +358,21 @@ export function TicketDetailPage() {
               {selectedTicket.status === 'active' && (
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800 text-center">
-                    ✓ This ticket is valid and ready to use
+                    ✓ Vé này còn hiệu lực và sẵn sàng để sử dụng
                   </p>
                 </div>
               )}
 
               {selectedTicket.status === 'used' && (
                 <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-sm text-gray-700 text-center">This ticket has already been used</p>
+                  <p className="text-sm text-gray-700 text-center">Vé này đã được sử dụng</p>
                 </div>
               )}
 
               {selectedTicket.status === 'cancelled' && (
                 <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-800 text-center">
-                    This ticket has been cancelled and is no longer valid
+                    Vé này đã bị hủy và không còn hiệu lực
                   </p>
                 </div>
               )}

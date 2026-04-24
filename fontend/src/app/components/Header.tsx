@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Ticket, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
+import { AuthModal } from './AuthModal';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const location = useLocation();
   const isTicketDetailPage = location.pathname === '/ticket-detail';
 
@@ -24,22 +26,25 @@ export function Header() {
 
             {/* Desktop: Action Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <button className="px-5 py-2.5 text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium">
-                Manager Login
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="px-5 py-2.5 text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium"
+              >
+                Đăng nhập quản lý
               </button>
               {isTicketDetailPage ? (
                 <button
                   disabled
                   className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg font-medium cursor-not-allowed opacity-90"
                 >
-                  Ticket Detail
+                  Chi tiết vé
                 </button>
               ) : (
                 <Link
                   to="/ticket-detail"
                   className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium"
                 >
-                  Ticket Detail
+                  Chi tiết vé
                 </Link>
               )}
             </div>
@@ -76,7 +81,7 @@ export function Header() {
             {/* Menu Header */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-lg text-gray-900">Menu</span>
+                <span className="font-semibold text-lg text-gray-900">Danh mục</span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -89,17 +94,20 @@ export function Header() {
             {/* Menu Items */}
             <div className="p-6 space-y-3">
               <button
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setAuthModalOpen(true);
+                }}
                 className="w-full px-5 py-3 text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-all duration-300 font-medium"
               >
-                Manager Login
+                Đăng nhập quản lý
               </button>
               {isTicketDetailPage ? (
                 <button
                   disabled
                   className="w-full px-5 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg font-medium cursor-not-allowed opacity-90"
                 >
-                  Ticket Detail
+                  Chi tiết vé
                 </button>
               ) : (
                 <Link
@@ -107,13 +115,16 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full px-5 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium text-center"
                 >
-                  Ticket Detail
+                  Chi tiết vé
                 </Link>
               )}
             </div>
           </div>
         </>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
 }

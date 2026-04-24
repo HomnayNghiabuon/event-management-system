@@ -48,7 +48,7 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         <div className="mb-4">
-          <span className="text-xs sm:text-sm text-gray-500">From</span>
+          <span className="text-xs sm:text-sm text-gray-500">Từ</span>
           <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {event.price}
           </div>
@@ -61,13 +61,13 @@ export function EventCard({ event }: EventCardProps) {
             to={`/event/${event.id}`}
             className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm text-center"
           >
-            View Details
+            Xem chi tiết
           </Link>
           <Link
             to={`/event/${event.id}`}
             className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm text-center"
           >
-            Book Ticket
+            Đặt vé
           </Link>
         </div>
 
@@ -77,13 +77,13 @@ export function EventCard({ event }: EventCardProps) {
             to={`/event/${event.id}`}
             className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm text-center"
           >
-            Book Ticket
+            Đặt vé
           </Link>
           <Link
             to={`/event/${event.id}`}
             className="w-full px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm text-center"
           >
-            View Details
+            Xem chi tiết
           </Link>
         </div>
       </div>

@@ -6,9 +6,9 @@ interface CategoryTabsProps {
 }
 
 const categories = [
-  { id: 'Live Concert', name: 'Live Concert', icon: Music },
-  { id: 'Workshop', name: 'Workshop', icon: Lightbulb },
-  { id: 'Fan Meeting', name: 'Fan Meeting', icon: Users },
+  { id: 'Hòa nhạc trực tiếp', name: 'Hòa nhạc trực tiếp', icon: Music },
+  { id: 'Hội thảo', name: 'Hội thảo', icon: Lightbulb },
+  { id: 'Họp fan', name: 'Họp fan', icon: Users },
 ];
 
 export function CategoryTabs({ activeCategory, setActiveCategory }: CategoryTabsProps) {

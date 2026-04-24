@@ -27,7 +27,7 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Get ticket details
-  const regularTicket = ticketTypes.find((t) => t.name.includes('Regular')) || ticketTypes[0];
+  const regularTicket = ticketTypes.find((t) => t.name.includes('Thường')) || ticketTypes.find((t) => t.name.includes('Regular')) || ticketTypes[0];
   const vipTicket = ticketTypes.find((t) => t.name.includes('VIP')) || ticketTypes[1];
 
   // Calculate totals
@@ -45,11 +45,11 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
   // Validate ID Number
   const validateIdNumber = (value: string) => {
     if (value.length === 0) {
-      setIdError('ID Number is required');
+      setIdError('Không được để trống CCCD');
       return false;
     }
     if (!/^\d{12}$/.test(value)) {
-      setIdError('ID Number must be exactly 12 digits');
+      setIdError('CCCD phải bao gồm đúng 12 chữ số');
       return false;
     }
     setIdError('');
@@ -67,18 +67,18 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
 
   const handleProceedToPayment = () => {
     if (!fullName.trim()) {
-      alert('Please enter your full name');
+      alert('Vui lòng nhập họ tên của bạn');
       return;
     }
     if (!validateIdNumber(idNumber)) {
       return;
     }
     if (totalTickets === 0) {
-      alert('Please select at least one ticket');
+      alert('Vui lòng chọn ít nhất một vé');
       return;
     }
     if (!confirmed) {
-      alert('Please confirm that your ticket information is correct');
+      alert('Vui lòng xác nhận thông tin vé của bạn là chính xác');
       return;
     }
     setStep('payment');
@@ -136,20 +136,20 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
               exit={{ opacity: 0, x: -20 }}
               className="p-6 sm:p-8"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Book Your Ticket</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Đặt Vé Của Bạn</h2>
               <p className="text-gray-600 mb-6">{eventTitle}</p>
 
               <div className="space-y-6">
                 {/* Full Name */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Full Name <span className="text-red-500">*</span>
+                    Họ và Tên <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder="Nhập họ tên của bạn"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
@@ -157,13 +157,13 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 {/* ID Number */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    ID Number (CCCD) <span className="text-red-500">*</span>
+                    Số CCCD/CMND <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={idNumber}
                     onChange={(e) => handleIdNumberChange(e.target.value)}
-                    placeholder="Enter 12-digit ID number"
+                    placeholder="Nhập số CMND/CCCD 12 chữ số"
                     maxLength={12}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all ${
                       idError ? 'border-red-500' : 'border-gray-300'
@@ -180,7 +180,7 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 {/* Ticket Type Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Select Tickets <span className="text-red-500">*</span>
+                    Chọn Vé <span className="text-red-500">*</span>
                   </label>
                   <div className="space-y-4">
                     {/* Regular Ticket */}
@@ -191,13 +191,13 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                           <p className="text-sm text-gray-600 mb-2">{regularTicket.description}</p>
                           <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                              ${regularTicket.price}
+                              {regularTicket.price.toLocaleString('vi-VN')} VND
                             </span>
-                            <span className="text-sm text-gray-500">/ ticket</span>
+                            <span className="text-sm text-gray-500">/ vé</span>
                           </div>
                         </div>
                         <div className="flex flex-col items-center gap-2 ml-4">
-                          <span className="text-xs text-gray-500 font-semibold">Quantity</span>
+                          <span className="text-xs text-gray-500 font-semibold">Số lượng</span>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -229,13 +229,13 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                           <p className="text-sm text-gray-600 mb-2">{vipTicket.description}</p>
                           <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                              ${vipTicket.price}
+                              {vipTicket.price.toLocaleString('vi-VN')} VND
                             </span>
-                            <span className="text-sm text-gray-500">/ ticket</span>
+                            <span className="text-sm text-gray-500">/ vé</span>
                           </div>
                         </div>
                         <div className="flex flex-col items-center gap-2 ml-4">
-                          <span className="text-xs text-gray-500 font-semibold">Quantity</span>
+                          <span className="text-xs text-gray-500 font-semibold">Số lượng</span>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -261,7 +261,7 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                   </div>
                   <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-purple-600 rounded-full"></span>
-                    You can select both ticket types at the same time
+                    Bạn có thể chọn nhiều loại vé cùng lúc
                   </p>
                 </div>
 
@@ -269,7 +269,7 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-purple-200 min-h-[200px]">
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <TicketIcon className="w-5 h-5 text-purple-600" />
-                    Ticket Summary
+                    Tóm Tắt Vé
                   </h3>
                   
                   {selectedTickets.length > 0 ? (
@@ -279,25 +279,25 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                         <div key={index} className="pb-3 border-b border-purple-200 last:border-0 last:pb-0">
                           <div className="flex justify-between mb-2">
                             <span className="font-semibold text-gray-900">{item.ticket.name}</span>
-                            <span className="text-gray-600">${item.ticket.price} × {item.quantity}</span>
+                            <span className="text-gray-600">{item.ticket.price.toLocaleString('vi-VN')} VND × {item.quantity}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-bold text-gray-900">${item.subtotal}</span>
+                            <span className="text-gray-600">Tổng phụ:</span>
+                            <span className="font-bold text-gray-900">{item.subtotal.toLocaleString('vi-VN')} VND</span>
                           </div>
                         </div>
                       ))}
                       
                       {/* Total Price */}
                       <div className="border-t-2 border-purple-300 pt-3 mt-3 flex justify-between items-center">
-                        <span className="font-bold text-gray-900 text-base">Total Price:</span>
+                        <span className="font-bold text-gray-900 text-base">Tổng Tiền:</span>
                         <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          ${totalPrice}
+                          {totalPrice.toLocaleString('vi-VN')} VND
                         </span>
                       </div>
                       
                       <div className="flex justify-between text-xs text-gray-600 pt-2">
-                        <span>Total Tickets:</span>
+                        <span>Tổng Số Vé:</span>
                         <span className="font-semibold">{totalTickets}</span>
                       </div>
                     </div>
@@ -306,8 +306,8 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                       <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-3">
                         <TicketIcon className="w-8 h-8 text-gray-400" />
                       </div>
-                      <p className="text-gray-500 text-sm">No tickets selected</p>
-                      <p className="text-gray-400 text-xs mt-1">Select tickets to see your summary</p>
+                      <p className="text-gray-500 text-sm">Chưa có vé nào được chọn</p>
+                      <p className="text-gray-400 text-xs mt-1">Chọn vé để xem tóm tắt</p>
                     </div>
                   )}
                 </div>
@@ -321,15 +321,14 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                     className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                   />
                   <span className="text-sm text-gray-700">
-                    I confirm that my ticket information is correct <span className="text-red-500">*</span>
+                    Tôi xác nhận thông tin vé của tôi là chính xác <span className="text-red-500">*</span>
                   </span>
                 </label>
 
                 {/* Note */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> Ticket information and QR code will be sent via email or available in
-                    My Tickets section after payment confirmation.
+                    <strong>Lưu ý:</strong> Thông tin vé và mã QR sẽ được gửi qua email hoặc có sẵn trong phần Vé Của Tôi sau khi xác nhận thanh toán.
                   </p>
                 </div>
 
@@ -338,7 +337,7 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                   onClick={handleProceedToPayment}
                   className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold text-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                 >
-                  Proceed to Payment
+                  Tiến Hành Thanh Toán
                 </button>
               </div>
             </motion.div>
@@ -353,40 +352,40 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
               exit={{ opacity: 0, x: -20 }}
               className="p-6 sm:p-8"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Payment</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Thanh Toán</h2>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Ticket Summary */}
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 h-fit">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <TicketIcon className="w-5 h-5 text-purple-600" />
-                    Order Summary
+                    Tóm Tắt Đơn Hàng
                   </h3>
                   <div className="space-y-3 text-sm">
                     <div>
-                      <p className="text-gray-500 text-xs mb-1">Event</p>
+                      <p className="text-gray-500 text-xs mb-1">Sự kiện</p>
                       <p className="font-semibold text-gray-900">{eventTitle}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs mb-1">Full Name</p>
+                      <p className="text-gray-500 text-xs mb-1">Họ và Tên</p>
                       <p className="font-semibold text-gray-900">{fullName}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs mb-1">ID Number</p>
+                      <p className="text-gray-500 text-xs mb-1">Số CCCD/CMND</p>
                       <p className="font-semibold text-gray-900">{idNumber}</p>
                     </div>
 
                     {/* Ticket Details */}
                     <div className="border-t border-gray-300 pt-3 mt-3">
-                      <p className="text-gray-500 text-xs mb-2">Tickets</p>
+                      <p className="text-gray-500 text-xs mb-2">Vé</p>
                       <div className="space-y-2">
                         {selectedTickets.map((item: any, index) => (
                           <div key={index} className="flex justify-between items-center">
                             <div>
                               <p className="font-semibold text-gray-900">{item.ticket.name}</p>
-                              <p className="text-xs text-gray-500">${item.ticket.price} × {item.quantity}</p>
+                              <p className="text-xs text-gray-500">{item.ticket.price.toLocaleString('vi-VN')} VND × {item.quantity}</p>
                             </div>
-                            <p className="font-bold text-gray-900">${item.subtotal}</p>
+                            <p className="font-bold text-gray-900">{item.subtotal.toLocaleString('vi-VN')} VND</p>
                           </div>
                         ))}
                       </div>
@@ -394,13 +393,13 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
 
                     <div className="border-t border-gray-300 pt-3 mt-3">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Total Tickets:</span>
+                        <span className="text-gray-600">Tổng Số Vé:</span>
                         <span className="font-semibold text-gray-900">{totalTickets}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-gray-900">Total Amount:</span>
+                        <span className="font-bold text-gray-900">Tổng Số Tiền:</span>
                         <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          ${totalPrice}
+                          {totalPrice.toLocaleString('vi-VN')} VND
                         </span>
                       </div>
                     </div>
@@ -410,15 +409,15 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 {/* Right: Payment Method */}
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Payment Method</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Phương Thức Thanh Toán</label>
                     <div className="border-2 border-purple-500 bg-purple-50 rounded-lg p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center">
                           <span className="text-white font-bold text-lg">M</span>
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900">MoMo Wallet</p>
-                          <p className="text-sm text-gray-600">Scan QR code to pay</p>
+                          <p className="font-semibold text-gray-900">Ví MoMo</p>
+                          <p className="text-sm text-gray-600">Quét mã QR để thanh toán</p>
                         </div>
                       </div>
                     </div>
@@ -430,29 +429,29 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                       <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                         <div className="text-center">
                           <div className="w-40 h-40 bg-white border-4 border-gray-300 rounded-lg mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-500">QR Code</p>
+                          <p className="text-sm text-gray-500">Mã QR</p>
                         </div>
                       </div>
                       <p className="text-sm text-gray-600 text-center">
-                        Scan this QR code with your MoMo app to complete payment
+                        Quét mã QR này bằng ứng dụng MoMo của bạn để hoàn tất thanh toán
                       </p>
                     </div>
                   </div>
 
                   {/* Bank Info */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3 text-sm">Bank Transfer Information</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3 text-sm">Thông Tin Chuyển Khoản Ngân Hàng</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Bank Name:</span>
+                        <span className="text-gray-600">Tên Ngân Hàng:</span>
                         <span className="font-semibold text-gray-900">Vietcombank</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Account Number:</span>
+                        <span className="text-gray-600">Số Tài Khoản:</span>
                         <span className="font-semibold text-gray-900">1234567890</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Account Holder:</span>
+                        <span className="text-gray-600">Chủ Tài Khoản:</span>
                         <span className="font-semibold text-gray-900">BuyTicket Co., Ltd</span>
                       </div>
                     </div>
@@ -469,10 +468,10 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                     {isProcessing ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Processing...
+                        Đang xử lý...
                       </>
                     ) : (
-                      'Confirm Payment'
+                      'Xác Nhận Thanh Toán'
                     )}
                   </button>
                 </div>
@@ -492,21 +491,21 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-12 h-12 text-green-600" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h2>
-                <p className="text-gray-600 mb-2">Your ticket has been booked successfully.</p>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Thanh Toán Thành Công!</h2>
+                <p className="text-gray-600 mb-2">Vé của bạn đã được đặt thành công.</p>
                 <p className="text-gray-600 mb-6">
-                  Ticket details and QR code have been sent to your email.
+                  Chi tiết vé và mã QR đã được gửi đến email của bạn.
                 </p>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-green-800">
-                    You will be redirected to the homepage in a few seconds...
+                    Bạn sẽ được chuyển hướng về trang chủ trong vài giây...
                   </p>
                 </div>
                 <button
                   onClick={() => (window.location.href = '/')}
                   className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
                 >
-                  Back to Homepage
+                  Về Trang Chủ
                 </button>
               </div>
             </motion.div>
@@ -524,20 +523,20 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <XCircle className="w-12 h-12 text-red-600" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Payment Failed</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Thanh Toán Thất Bại</h2>
                 <p className="text-gray-600 mb-6">
-                  Unfortunately, your payment could not be processed. Please try again.
+                  Rất tiếc, thanh toán của bạn không thể được xử lý. Vui lòng thử lại.
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-red-800">
-                    If the problem persists, please contact our support team.
+                    Nếu vấn đề vẫn tiếp diễn, vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.
                   </p>
                 </div>
                 <button
                   onClick={() => setStep('payment')}
                   className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
                 >
-                  Try Again
+                  Thử Lại
                 </button>
               </div>
             </motion.div>
@@ -558,10 +557,10 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 <span className="text-white text-2xl">💳</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Confirm Payment Result (Demo)
+                Xác Nhận Kết Quả Thanh Toán (Demo)
               </h3>
               <p className="text-gray-600 text-sm">
-                Choose a result to simulate the payment outcome
+                Chọn kết quả để mô phỏng kết quả thanh toán
               </p>
             </div>
 
@@ -572,7 +571,7 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <CheckCircle className="w-5 h-5" />
-                Payment Successful
+                Thanh Toán Thành Công
               </button>
 
               {/* Failed Button */}
@@ -581,13 +580,13 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }: BookingFlowPro
                 className="w-full py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <XCircle className="w-5 h-5" />
-                Payment Failed
+                Thanh Toán Thất Bại
               </button>
             </div>
 
             <div className="mt-6 pt-6 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
-                This is a demo environment. Select an outcome to continue.
+                Đây là môi trường demo. Chọn một kết quả để tiếp tục.
               </p>
             </div>
           </motion.div>
