@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events", "/api/v1/events/{eventId}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/categories").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/tickets/*/qr-image").authenticated()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()

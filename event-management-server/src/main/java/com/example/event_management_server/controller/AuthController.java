@@ -3,6 +3,7 @@ package com.example.event_management_server.controller;
 import com.example.event_management_server.dto.*;
 import com.example.event_management_server.service.AuthService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,9 +28,17 @@ public class AuthController {
         return authService.login(request);
     }
 
+    /**
+     * Đổi refresh token lấy access token mới.
+     * Body: { "refreshToken": "eyJ..." }
+     */
     @PostMapping("/refresh-token")
-    public RefreshTokenResponse refreshToken(
-            @RequestHeader("Authorization") String authHeader) {
-        return authService.refreshToken(authHeader);
+    public RefreshTokenResponse refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        return authService.refreshToken(request.refreshToken());
     }
+
+    record RefreshTokenRequest(
+            @NotBlank(message = "refreshToken không được để trống")
+            String refreshToken
+    ) {}
 }

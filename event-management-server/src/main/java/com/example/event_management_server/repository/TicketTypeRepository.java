@@ -21,4 +21,7 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, Integer>
 
     @Query("SELECT COALESCE(SUM(tt.quantity), 0) FROM TicketType tt WHERE tt.event.eventId = :eventId")
     long sumAvailableQuantityByEventId(@Param("eventId") Integer eventId);
+
+    @Query("SELECT t FROM TicketType t JOIN FETCH t.event WHERE t.ticketTypeId = :id")
+    Optional<TicketType> findByIdWithEvent(@Param("id") Integer id);
 }

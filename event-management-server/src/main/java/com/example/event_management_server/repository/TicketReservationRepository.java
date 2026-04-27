@@ -24,4 +24,6 @@ public interface TicketReservationRepository extends JpaRepository<TicketReserva
 
     @Query("SELECT r FROM TicketReservation r WHERE r.status = 'PENDING' AND r.expiresAt < :now")
     List<TicketReservation> findExpiredPendingReservations(@Param("now") Instant now);
+
+    long countByTicketType_Event_EventId(Integer eventId);
 }

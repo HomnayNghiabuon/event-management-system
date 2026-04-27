@@ -94,6 +94,9 @@ public class OrderController {
         order.setPaymentStatus("CANCELLED");
         orderRepository.save(order);
 
+        // Vô hiệu hóa tất cả tickets của đơn hàng này
+        ticketRepository.invalidateByOrderId(orderId);
+
         TicketReservation reservation = order.getTicketReservation();
         if (reservation != null) {
             reservation.setStatus(com.example.event_management_server.model.ReservationStatus.CANCELLED);
@@ -105,7 +108,7 @@ public class OrderController {
     }
 
     private OrderResponse toResponse(Order order) {
-        List<Ticket> tickets = ticketRepository.findByAttendee_Id(order.getUser().getId());
+        List<Ticket> tickets = ticketRepository.findByOrderId(order.getOrderId());
         List<OrderResponse.TicketInfo> infos = tickets.stream()
                 .map(t -> new OrderResponse.TicketInfo(
                         t.getTicketId(), t.getQrCode(), t.getAttendeeName(), t.getCheckinStatus()))

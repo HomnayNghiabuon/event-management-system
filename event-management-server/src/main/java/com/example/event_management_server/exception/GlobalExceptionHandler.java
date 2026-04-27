@@ -1,8 +1,10 @@
 package com.example.event_management_server.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -46,9 +48,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public org.springframework.http.ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
+        String message = ex.getReason() != null ? ex.getReason() : ex.getMessage();
         return org.springframework.http.ResponseEntity
                 .status(ex.getStatusCode())
-                .body(Map.of("error", ex.getMessage()));
+                .body(Map.of("error", message));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -61,6 +64,18 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Map<String, String> handleBadCredentials(BadCredentialsException ex) {
         return Map.of("error", "Email hoặc password không đúng");
+    }
+
+    @ExceptionHandler(LockedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, String> handleLocked(LockedException ex) {
+        return Map.of("error", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleDataIntegrity(DataIntegrityViolationException ex) {
+        return Map.of("error", "Không thể thực hiện thao tác do ràng buộc dữ liệu. Hãy kiểm tra lại các đơn hàng hoặc giữ chỗ liên quan.");
     }
 
     @ExceptionHandler(RuntimeException.class)

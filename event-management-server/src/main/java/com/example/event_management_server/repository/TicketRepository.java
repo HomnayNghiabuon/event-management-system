@@ -12,7 +12,15 @@ import java.util.Optional;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Integer> {
-    List<Ticket> findByAttendee_Id(java.util.UUID attendeeId);
+    @Query("""
+        SELECT t FROM Ticket t
+        JOIN FETCH t.orderDetail od
+        JOIN FETCH od.ticketType tt
+        JOIN FETCH tt.event
+        WHERE t.attendee.id = :attendeeId
+        ORDER BY t.ticketId DESC
+        """)
+    List<Ticket> findByAttendee_Id(@Param("attendeeId") java.util.UUID attendeeId);
     @Query("SELECT t FROM Ticket t JOIN FETCH t.orderDetail od JOIN FETCH od.ticketType tt JOIN FETCH tt.event WHERE t.qrCode = :qrCode")
     Optional<Ticket> findByQrCode(@Param("qrCode") String qrCode);
 
@@ -32,7 +40,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
         JOIN od.order o
         JOIN o.ticketReservation r
         JOIN r.ticketType tt
-        WHERE tt.event.eventId = :eventId
+        WHERE tt.event.eventId = :eventId AND t.isValid = true
         """)
     long countByEventId(@Param("eventId") Integer eventId);
 
@@ -42,7 +50,14 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
         JOIN od.order o
         JOIN o.ticketReservation r
         JOIN r.ticketType tt
-        WHERE tt.event.eventId = :eventId AND t.checkinStatus = true
+        WHERE tt.event.eventId = :eventId AND t.checkinStatus = true AND t.isValid = true
         """)
     long countCheckedInByEventId(@Param("eventId") Integer eventId);
+
+    @Query("SELECT t FROM Ticket t WHERE t.orderDetail.order.orderId = :orderId")
+    List<Ticket> findByOrderId(@Param("orderId") Integer orderId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Ticket t SET t.isValid = false WHERE t.orderDetail.order.orderId = :orderId")
+    int invalidateByOrderId(@Param("orderId") Integer orderId);
 }

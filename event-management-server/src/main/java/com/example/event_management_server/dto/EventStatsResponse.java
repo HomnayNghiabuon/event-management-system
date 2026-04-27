@@ -8,6 +8,9 @@ public record EventStatsResponse(
         long totalTicketsSold,
         long totalTicketsAvailable,
         BigDecimal totalRevenue,
+        BigDecimal commissionPercent,
+        BigDecimal commissionAmount,
+        BigDecimal netRevenue,
         long totalOrders,
         long checkedInCount
 ) {}

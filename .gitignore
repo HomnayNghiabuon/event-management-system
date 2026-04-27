@@ -54,3 +54,14 @@ desktop.ini
 ### Logs ###
 *.log
 logs/
+
+### Java compiled ###
+*.class
+*.jar
+*.war
+
+### Frontend ###
+node_modules/
+frontend/dist/
+frontend/.vite/
+dist/

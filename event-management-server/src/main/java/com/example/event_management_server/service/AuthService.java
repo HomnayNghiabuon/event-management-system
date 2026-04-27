@@ -28,6 +28,10 @@ public class AuthService {
     }
 
     public RegisterResponse register(RegisterRequest request) {
+        if (request.role() == Role.ADMIN) {
+            throw new IllegalArgumentException("Không thể tự đăng ký tài khoản ADMIN");
+        }
+
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email đã được sử dụng: " + request.email());
         }
@@ -68,10 +72,12 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
-        String accessToken = jwtService.generateToken(user);
+        String accessToken  = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
         return new LoginResponse(
                 accessToken,
+                refreshToken,
                 "Bearer",
                 3600,
                 new LoginResponse.UserInfo(
@@ -83,13 +89,21 @@ public class AuthService {
         );
     }
 
-    public RefreshTokenResponse refreshToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Authorization header không hợp lệ");
+    /**
+     * Nhận refreshToken trong request body, trả về accessToken mới.
+     * Body: { "refreshToken": "..." }
+     */
+    public RefreshTokenResponse refreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new IllegalArgumentException("refreshToken không được để trống");
         }
 
-        String refreshToken = authHeader.substring(7);
-        String email = jwtService.extractUsername(refreshToken);
+        String email;
+        try {
+            email = jwtService.extractUsername(refreshToken);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Refresh token không hợp lệ");
+        }
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));

@@ -54,7 +54,8 @@ public class AdminService {
             long rejectedEvents,
             long totalOrganizers,
             long totalAttendees,
-            long totalOrders
+            long totalOrders,
+            java.math.BigDecimal totalRevenue
     ) {}
 
     // EVENT APPROVAL
@@ -215,7 +216,8 @@ public class AdminService {
                 eventRepository.countByApprovalStatus("REJECTED"),
                 userRepository.countByRole(Role.ORGANIZER),
                 userRepository.countByRole(Role.ATTENDEE),
-                orderRepository.count()
+                orderRepository.count(),
+                orderRepository.sumTotalRevenue()
         );
     }
 

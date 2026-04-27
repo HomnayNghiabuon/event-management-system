@@ -6,15 +6,29 @@ public class ReservationResponseDTO {
 
     private Integer reservationId;
     private Integer ticketTypeId;
+    private String ticketTypeName;
+    private String eventTitle;
     private Integer quantity;
     private String status;
     private Instant expirationTime;
 
     public ReservationResponseDTO() {}
 
-    public ReservationResponseDTO(Integer reservationId, Integer ticketTypeId, Integer quantity, String status, Instant expirationTime) {
+    public ReservationResponseDTO(Integer reservationId, Integer ticketTypeId, Integer quantity,
+                                  String status, Instant expirationTime) {
         this.reservationId = reservationId;
         this.ticketTypeId = ticketTypeId;
+        this.quantity = quantity;
+        this.status = status;
+        this.expirationTime = expirationTime;
+    }
+
+    public ReservationResponseDTO(Integer reservationId, Integer ticketTypeId, String ticketTypeName,
+                                  String eventTitle, Integer quantity, String status, Instant expirationTime) {
+        this.reservationId = reservationId;
+        this.ticketTypeId = ticketTypeId;
+        this.ticketTypeName = ticketTypeName;
+        this.eventTitle = eventTitle;
         this.quantity = quantity;
         this.status = status;
         this.expirationTime = expirationTime;
@@ -25,6 +39,12 @@ public class ReservationResponseDTO {
 
     public Integer getTicketTypeId() { return ticketTypeId; }
     public void setTicketTypeId(Integer ticketTypeId) { this.ticketTypeId = ticketTypeId; }
+
+    public String getTicketTypeName() { return ticketTypeName; }
+    public void setTicketTypeName(String ticketTypeName) { this.ticketTypeName = ticketTypeName; }
+
+    public String getEventTitle() { return eventTitle; }
+    public void setEventTitle(String eventTitle) { this.eventTitle = eventTitle; }
 
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }

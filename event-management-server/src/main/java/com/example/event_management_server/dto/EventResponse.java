@@ -25,6 +25,8 @@ public record EventResponse(
         String thumbnail,
         BigDecimal minPrice,
         String status,
+        String approvalStatus,
+        String rejectionReason,
         OrganizerInfo organizer,
         List<TicketTypeResponse> ticketTypes,
         Instant createdAt,
@@ -46,6 +48,8 @@ public record EventResponse(
                 e.getThumbnail(),
                 e.getMinPrice(),
                 e.getStatus(),
+                e.getApprovalStatus(),
+                e.getRejectionReason(),
                 e.getOrganizer() != null
                         ? new OrganizerInfo(e.getOrganizer().getId().toString(), e.getOrganizer().getFullName())
                         : null,

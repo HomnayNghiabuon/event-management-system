@@ -7,6 +7,8 @@ import com.example.event_management_server.model.TicketType;
 import com.example.event_management_server.model.User;
 import com.example.event_management_server.repository.CategoryRepository;
 import com.example.event_management_server.repository.EventRepository;
+import com.example.event_management_server.repository.OrderDetailRepository;
+import com.example.event_management_server.repository.TicketReservationRepository;
 import com.example.event_management_server.repository.TicketTypeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,13 +31,19 @@ public class EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final TicketTypeRepository ticketTypeRepository;
+    private final TicketReservationRepository ticketReservationRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     public EventService(EventRepository eventRepository,
                         CategoryRepository categoryRepository,
-                        TicketTypeRepository ticketTypeRepository) {
+                        TicketTypeRepository ticketTypeRepository,
+                        TicketReservationRepository ticketReservationRepository,
+                        OrderDetailRepository orderDetailRepository) {
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
         this.ticketTypeRepository = ticketTypeRepository;
+        this.ticketReservationRepository = ticketReservationRepository;
+        this.orderDetailRepository = orderDetailRepository;
     }
 
     // PUBLIC
@@ -61,11 +69,28 @@ public class EventService {
     }
 
     /**
-     * Lấy chi tiết sự kiện theo ID (PUBLIC).
+     * Lấy chi tiết sự kiện theo ID.
+     * - Public: chỉ thấy PUBLISHED
+     * - Organizer/Admin: truyền requestingUser để xem cả DRAFT
      */
     @Transactional(readOnly = true)
-    public EventResponse getEventById(Integer eventId) {
+    public EventResponse getEventById(Integer eventId, User requestingUser) {
         Event event = findEventOrThrow(eventId);
+
+        boolean isPublished = "PUBLISHED".equals(event.getStatus());
+        if (!isPublished) {
+            if (requestingUser == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sự kiện không tồn tại");
+            }
+            boolean isAdmin = requestingUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            boolean isOwner = event.getOrganizer() != null
+                    && event.getOrganizer().getId().equals(requestingUser.getId());
+            if (!isAdmin && !isOwner) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sự kiện không tồn tại");
+            }
+        }
+
         List<TicketType> ticketTypes = ticketTypeRepository.findByEvent_EventId(eventId);
         return EventResponse.from(event, ticketTypes);
     }
@@ -76,6 +101,7 @@ public class EventService {
      * Tạo sự kiện mới (ORGANIZER).
      */
     public EventResponse createEvent(EventRequest request, User organizer) {
+        validateEventTimes(request);
         Category category = findCategoryOrThrow(request.categoryId());
 
         Event event = Event.builder()
@@ -103,6 +129,7 @@ public class EventService {
      * Cập nhật sự kiện (ORGANIZER – chỉ sự kiện của mình, trạng thái DRAFT).
      */
     public EventResponse updateEvent(Integer eventId, EventRequest request, User organizer) {
+        validateEventTimes(request);
         Event event = findEventOrThrow(eventId);
         checkOwnership(event, organizer.getId());
 
@@ -121,6 +148,12 @@ public class EventService {
         event.setStartTime(request.startTime());
         event.setEndTime(request.endTime());
         event.setThumbnail(request.thumbnail());
+
+        // Reset về PENDING nếu event bị REJECTED để admin biết cần duyệt lại
+        if ("REJECTED".equals(event.getApprovalStatus())) {
+            event.setApprovalStatus("PENDING");
+            event.setRejectionReason(null);
+        }
 
         Event saved = eventRepository.save(event);
 
@@ -166,6 +199,12 @@ public class EventService {
             checkOwnership(event, user.getId());
         }
 
+        if (ticketReservationRepository.countByTicketType_Event_EventId(eventId) > 0
+                || orderDetailRepository.countByEventId(eventId) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Không thể xóa sự kiện đã có đơn đặt vé hoặc giữ chỗ.");
+        }
+
         ticketTypeRepository.deleteByEvent_EventId(eventId);
         eventRepository.delete(event);
     }
@@ -181,6 +220,14 @@ public class EventService {
     }
 
     // private helpers
+
+    private void validateEventTimes(EventRequest request) {
+        if (request.startTime() != null && request.endTime() != null
+                && !request.endTime().isAfter(request.startTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Giờ kết thúc phải sau giờ bắt đầu");
+        }
+    }
 
     private Event findEventOrThrow(Integer eventId) {
         return eventRepository.findById(eventId)

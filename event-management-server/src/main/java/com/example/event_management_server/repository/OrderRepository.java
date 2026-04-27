@@ -34,4 +34,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         WHERE tt.event.eventId = :eventId AND o.paymentStatus = 'PAID'
         """)
     long countPaidOrdersByEventId(@Param("eventId") Integer eventId);
+
+    @Query("SELECT COALESCE(SUM(o.totalPrice), 0) FROM Order o WHERE o.paymentStatus = 'PAID'")
+    java.math.BigDecimal sumTotalRevenue();
 }

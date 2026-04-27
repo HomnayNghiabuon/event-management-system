@@ -63,9 +63,34 @@ public class ReservationService {
 
         TicketReservation saved = ticketReservationRepository.save(reservation);
 
+        // Load with event for response (separate from lock query to avoid H2 compatibility issue)
+        TicketType ttWithEvent = ticketTypeRepository.findByIdWithEvent(ticketType.getTicketTypeId())
+                .orElse(ticketType);
+        String eventTitle = ttWithEvent.getEvent() != null ? ttWithEvent.getEvent().getTitle() : null;
+
+        // Vé miễn phí: tự động tạo order và tickets ngay, không cần bước purchase
+        if (BigDecimal.ZERO.compareTo(ticketType.getPrice()) == 0) {
+            PurchaseRequestDTO freeRequest = new PurchaseRequestDTO();
+            freeRequest.setReservationId(saved.getReservationId());
+            freeRequest.setPaymentMethod(PaymentMethod.CASH);
+            processPayment(freeRequest, user);
+
+            return new ReservationResponseDTO(
+                    saved.getReservationId(),
+                    ttWithEvent.getTicketTypeId(),
+                    ttWithEvent.getName(),
+                    eventTitle,
+                    saved.getQuantity(),
+                    ReservationStatus.PAID.name(),
+                    saved.getExpiresAt()
+            );
+        }
+
         return new ReservationResponseDTO(
                 saved.getReservationId(),
-                saved.getTicketType().getTicketTypeId(),
+                ttWithEvent.getTicketTypeId(),
+                ttWithEvent.getName(),
+                eventTitle,
                 saved.getQuantity(),
                 saved.getStatus().name(),
                 saved.getExpiresAt()
@@ -149,13 +174,20 @@ public class ReservationService {
     public org.springframework.data.domain.Page<ReservationResponseDTO> getMyReservations(User user, int page, int size) {
         var pageable = org.springframework.data.domain.PageRequest.of(page, size);
         return ticketReservationRepository.findByUser_IdOrderByReservedAtDesc(user.getId(), pageable)
-                .map(r -> new ReservationResponseDTO(
-                        r.getReservationId(),
-                        r.getTicketType().getTicketTypeId(),
-                        r.getQuantity(),
-                        r.getStatus().name(),
-                        r.getExpiresAt()
-                ));
+                .map(r -> {
+                    String ticketTypeName = r.getTicketType() != null ? r.getTicketType().getName() : null;
+                    String eventTitle = (r.getTicketType() != null && r.getTicketType().getEvent() != null)
+                            ? r.getTicketType().getEvent().getTitle() : null;
+                    return new ReservationResponseDTO(
+                            r.getReservationId(),
+                            r.getTicketType() != null ? r.getTicketType().getTicketTypeId() : null,
+                            ticketTypeName,
+                            eventTitle,
+                            r.getQuantity(),
+                            r.getStatus().name(),
+                            r.getExpiresAt()
+                    );
+                });
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -171,21 +203,25 @@ public class ReservationService {
             throw new BadRequestException("Chỉ có thể hủy reservation ở trạng thái PENDING");
         }
 
-        handleExpiredReservation(reservation);
+        restoreTicketQuantity(reservation);
         reservation.setStatus(ReservationStatus.CANCELLED);
         ticketReservationRepository.save(reservation);
     }
 
     private void handleExpiredReservation(TicketReservation reservation) {
+        restoreTicketQuantity(reservation);
         reservation.setStatus(ReservationStatus.EXPIRED);
-        TicketType ticketType = reservation.getTicketType();
-        ticketType.setQuantity(ticketType.getQuantity() + reservation.getQuantity());
-        ticketTypeRepository.save(ticketType);
         ticketReservationRepository.save(reservation);
     }
 
+    private void restoreTicketQuantity(TicketReservation reservation) {
+        TicketType ticketType = reservation.getTicketType();
+        ticketType.setQuantity(ticketType.getQuantity() + reservation.getQuantity());
+        ticketTypeRepository.save(ticketType);
+    }
+
     private OrderResponse buildOrderResponse(Order order) {
-        List<Ticket> tickets = ticketRepository.findByAttendee_Id(order.getUser().getId());
+        List<Ticket> tickets = ticketRepository.findByOrderId(order.getOrderId());
         List<OrderResponse.TicketInfo> infos = tickets.stream()
                 .map(t -> new OrderResponse.TicketInfo(t.getTicketId(), t.getQrCode(), t.getAttendeeName(), t.getCheckinStatus()))
                 .toList();

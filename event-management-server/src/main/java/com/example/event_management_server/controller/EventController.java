@@ -2,8 +2,10 @@ package com.example.event_management_server.controller;
 
 import com.example.event_management_server.dto.*;
 import com.example.event_management_server.exception.NotFoundException;
+import com.example.event_management_server.model.Commission;
 import com.example.event_management_server.model.Event;
 import com.example.event_management_server.model.User;
+import com.example.event_management_server.repository.CommissionRepository;
 import com.example.event_management_server.repository.EventRepository;
 import com.example.event_management_server.repository.OrderRepository;
 import com.example.event_management_server.repository.TicketRepository;
@@ -28,17 +30,20 @@ public class EventController {
     private final OrderRepository orderRepository;
     private final TicketRepository ticketRepository;
     private final TicketTypeRepository ticketTypeRepository;
+    private final CommissionRepository commissionRepository;
 
     public EventController(EventService eventService,
                            EventRepository eventRepository,
                            OrderRepository orderRepository,
                            TicketRepository ticketRepository,
-                           TicketTypeRepository ticketTypeRepository) {
+                           TicketTypeRepository ticketTypeRepository,
+                           CommissionRepository commissionRepository) {
         this.eventService = eventService;
         this.eventRepository = eventRepository;
         this.orderRepository = orderRepository;
         this.ticketRepository = ticketRepository;
         this.ticketTypeRepository = ticketTypeRepository;
+        this.commissionRepository = commissionRepository;
     }
 
     // PUBLIC
@@ -63,10 +68,13 @@ public class EventController {
     /**
      * Xem chi tiết một sự kiện.
      * GET /api/v1/events/{eventId}
+     * Public chỉ thấy PUBLISHED. Organizer/Admin xem được DRAFT của mình.
      */
     @GetMapping("/{eventId}")
-    public EventResponse getEvent(@PathVariable Integer eventId) {
-        return eventService.getEventById(eventId);
+    public EventResponse getEvent(
+            @PathVariable Integer eventId,
+            @AuthenticationPrincipal User user) {
+        return eventService.getEventById(eventId, user);
     }
 
     // ORGANIZER
@@ -170,9 +178,20 @@ public class EventController {
 
         long ticketsSold      = ticketRepository.countByEventId(eventId);
         long ticketsAvailable = ticketTypeRepository.sumAvailableQuantityByEventId(eventId);
-        java.math.BigDecimal revenue = orderRepository.sumRevenueByEventId(eventId);
+        java.math.BigDecimal revenue   = orderRepository.sumRevenueByEventId(eventId);
         long totalOrders      = orderRepository.countPaidOrdersByEventId(eventId);
         long checkedIn        = ticketRepository.countCheckedInByEventId(eventId);
+
+        // Tính commission từ rate đang active
+        java.math.BigDecimal commissionPct = commissionRepository
+                .findFirstByIsActiveTrueOrderByEffectiveFromDesc()
+                .map(Commission::getPercent)
+                .orElse(java.math.BigDecimal.ZERO);
+
+        java.math.BigDecimal commissionAmt = revenue
+                .multiply(commissionPct)
+                .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        java.math.BigDecimal netRevenue = revenue.subtract(commissionAmt);
 
         return new EventStatsResponse(
                 eventId,
@@ -180,6 +199,9 @@ public class EventController {
                 ticketsSold,
                 ticketsAvailable,
                 revenue,
+                commissionPct,
+                commissionAmt,
+                netRevenue,
                 totalOrders,
                 checkedIn
         );

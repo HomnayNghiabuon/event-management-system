@@ -21,6 +21,7 @@ public record EventSummaryResponse(
         String thumbnail,
         BigDecimal minPrice,
         String status,
+        String approvalStatus,
         Instant createdAt
 ) {
     public static EventSummaryResponse from(Event e) {
@@ -35,6 +36,7 @@ public record EventSummaryResponse(
                 e.getThumbnail(),
                 e.getMinPrice(),
                 e.getStatus(),
+                e.getApprovalStatus(),
                 e.getCreatedAt()
         );
     }

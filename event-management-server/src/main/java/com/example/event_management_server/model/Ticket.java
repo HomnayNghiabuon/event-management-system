@@ -32,12 +32,14 @@ public class Ticket {
     @Column(name = "attendee_name", length = 255)
     private String attendeeName;
 
+    @Column(name = "is_valid", nullable = false)
+    private Boolean isValid = true;
+
     // ===== Lifecycle =====
     @PrePersist
     protected void onCreate() {
-        if (this.checkinStatus == null) {
-            this.checkinStatus = false;
-        }
+        if (this.checkinStatus == null) this.checkinStatus = false;
+        if (this.isValid == null) this.isValid = true;
     }
 
     // ===== Constructor =====
@@ -64,4 +66,7 @@ public class Ticket {
 
     public String getAttendeeName() { return attendeeName; }
     public void setAttendeeName(String attendeeName) { this.attendeeName = attendeeName; }
+
+    public Boolean getIsValid() { return isValid; }
+    public void setIsValid(Boolean isValid) { this.isValid = isValid; }
 }

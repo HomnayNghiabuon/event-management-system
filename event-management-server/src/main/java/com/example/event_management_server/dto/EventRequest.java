@@ -1,6 +1,7 @@
 package com.example.event_management_server.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ public record EventRequest(
         String location,
 
         @NotNull(message = "Ngày tổ chức không được để trống")
+        @FutureOrPresent(message = "Ngày tổ chức phải là hôm nay hoặc trong tương lai")
         LocalDate eventDate,
 
         @NotNull(message = "Giờ bắt đầu không được để trống")
