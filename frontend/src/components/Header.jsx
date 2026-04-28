@@ -24,6 +24,7 @@ export function Header() {
           { to: '/admin', label: 'Dashboard' },
           { to: '/admin/events', label: 'Duyệt sự kiện' },
           { to: '/admin/organizers', label: 'Organizer' },
+          { to: '/admin/categories', label: 'Danh mục' },
           { to: '/admin/commissions', label: 'Commission' },
         ]
       : user.role === 'ORGANIZER'

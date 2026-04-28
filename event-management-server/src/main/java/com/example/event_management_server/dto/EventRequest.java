@@ -22,6 +22,12 @@ public record EventRequest(
         @NotBlank(message = "Địa điểm không được để trống")
         String location,
 
+        Double latitude,
+
+        Double longitude,
+
+        String addressDetail,
+
         @NotNull(message = "Ngày tổ chức không được để trống")
         @FutureOrPresent(message = "Ngày tổ chức phải là hôm nay hoặc trong tương lai")
         LocalDate eventDate,

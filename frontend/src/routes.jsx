@@ -22,6 +22,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminEventsPage } from './pages/admin/AdminEventsPage'
 import { AdminOrganizersPage } from './pages/admin/AdminOrganizersPage'
 import { AdminCommissionsPage } from './pages/admin/AdminCommissionsPage'
+import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 
 export const router = createBrowserRouter([
   // Public
@@ -90,6 +91,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin/commissions',
     element: <ProtectedRoute roles={['ADMIN']}><AdminCommissionsPage /></ProtectedRoute>,
+  },
+  {
+    path: '/admin/categories',
+    element: <ProtectedRoute roles={['ADMIN']}><AdminCategoriesPage /></ProtectedRoute>,
   },
 
   { path: '*', element: <Navigate to="/" replace /> },

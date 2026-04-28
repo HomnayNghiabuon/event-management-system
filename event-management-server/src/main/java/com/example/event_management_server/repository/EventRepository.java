@@ -53,4 +53,6 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             Pageable pageable);
 
     long countByApprovalStatus(String approvalStatus);
+
+    long countByCategory_CategoryId(Integer categoryId);
 }

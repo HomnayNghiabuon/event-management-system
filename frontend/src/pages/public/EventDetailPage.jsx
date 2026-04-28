@@ -6,6 +6,15 @@ import { Footer } from '../../components/Footer'
 import { BookingFlow } from '../../components/BookingFlow'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
 import { getEventById } from '../../api/events'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow })
 
 const VND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
@@ -66,7 +75,7 @@ export function EventDetailPage() {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-6 lg:gap-8" style={{ isolation: 'isolate' }}>
           {/* Left: Info */}
           <div className="space-y-6">
             {/* Image */}
@@ -110,7 +119,13 @@ export function EventDetailPage() {
                   <div className="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-5 h-5 text-pink-600" />
                   </div>
-                  <div><p className="text-xs text-gray-500">Địa điểm</p><p className="font-semibold">{event.location}</p></div>
+                  <div>
+                    <p className="text-xs text-gray-500">Địa điểm</p>
+                    <p className="font-semibold">{event.location}</p>
+                    {event.addressDetail && (
+                      <p className="text-sm text-gray-500 mt-0.5">{event.addressDetail}</p>
+                    )}
+                  </div>
                 </div>
                 {event.organizer && (
                   <div className="flex items-center gap-3 text-gray-700">
@@ -122,6 +137,34 @@ export function EventDetailPage() {
                 )}
               </div>
             </div>
+
+            {/* Map */}
+            {event.latitude && event.longitude && (
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-pink-500" /> Vị trí sự kiện
+                </h2>
+                <div className="rounded-xl overflow-hidden border border-gray-200" style={{ isolation: 'isolate', zIndex: 0, position: 'relative' }}>
+                  <MapContainer
+                    center={[event.latitude, event.longitude]}
+                    zoom={15}
+                    style={{ height: '300px', width: '100%', zIndex: 0 }}
+                    scrollWheelZoom={false}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={[event.latitude, event.longitude]}>
+                      <Popup>{event.location}</Popup>
+                    </Marker>
+                  </MapContainer>
+                </div>
+                <p className="mt-2 text-sm text-gray-500 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" /> {event.location}
+                </p>
+              </div>
+            )}
 
             {/* Description */}
             <div className="bg-white rounded-xl p-6 shadow-md">

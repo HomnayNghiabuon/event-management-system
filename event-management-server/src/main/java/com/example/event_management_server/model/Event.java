@@ -42,6 +42,15 @@ public class Event {
     @Column(length = 255)
     private String location;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "address_detail", length = 255)
+    private String addressDetail;
+
     private String thumbnail;
 
     @Column(name = "min_price", precision = 19, scale = 2)
@@ -112,6 +121,9 @@ public class Event {
         private LocalTime endTime;
         private String status;
         private String location;
+        private Double latitude;
+        private Double longitude;
+        private String addressDetail;
         private String thumbnail;
         private BigDecimal minPrice;
         private String approvalStatus = "PENDING";
@@ -125,6 +137,9 @@ public class Event {
         public EventBuilder endTime(LocalTime endTime) { this.endTime = endTime; return this; }
         public EventBuilder status(String status) { this.status = status; return this; }
         public EventBuilder location(String location) { this.location = location; return this; }
+        public EventBuilder latitude(Double latitude) { this.latitude = latitude; return this; }
+        public EventBuilder longitude(Double longitude) { this.longitude = longitude; return this; }
+        public EventBuilder addressDetail(String addressDetail) { this.addressDetail = addressDetail; return this; }
         public EventBuilder thumbnail(String thumbnail) { this.thumbnail = thumbnail; return this; }
         public EventBuilder minPrice(BigDecimal minPrice) { this.minPrice = minPrice; return this; }
         public EventBuilder approvalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; return this; }
@@ -140,6 +155,9 @@ public class Event {
             e.endTime = this.endTime;
             e.status = this.status;
             e.location = this.location;
+            e.latitude = this.latitude;
+            e.longitude = this.longitude;
+            e.addressDetail = this.addressDetail;
             e.thumbnail = this.thumbnail;
             e.minPrice = this.minPrice;
             e.approvalStatus = this.approvalStatus;
@@ -158,6 +176,9 @@ public class Event {
     public LocalTime getEndTime() { return endTime; }
     public String getStatus() { return status; }
     public String getLocation() { return location; }
+    public Double getLatitude() { return latitude; }
+    public Double getLongitude() { return longitude; }
+    public String getAddressDetail() { return addressDetail; }
     public String getThumbnail() { return thumbnail; }
     public BigDecimal getMinPrice() { return minPrice; }
     public String getApprovalStatus() { return approvalStatus; }
@@ -178,6 +199,9 @@ public class Event {
     public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
     public void setStatus(String status) { this.status = status; }
     public void setLocation(String location) { this.location = location; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public void setAddressDetail(String addressDetail) { this.addressDetail = addressDetail; }
     public void setThumbnail(String thumbnail) { this.thumbnail = thumbnail; }
     public void setMinPrice(BigDecimal minPrice) { this.minPrice = minPrice; }
     public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }

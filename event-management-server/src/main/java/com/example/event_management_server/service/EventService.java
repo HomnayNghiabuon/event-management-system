@@ -109,6 +109,9 @@ public class EventService {
                 .description(request.description())
                 .category(category)
                 .location(request.location())
+                .latitude(request.latitude())
+                .longitude(request.longitude())
+                .addressDetail(request.addressDetail())
                 .eventDate(request.eventDate())
                 .startTime(request.startTime())
                 .endTime(request.endTime())
@@ -144,6 +147,9 @@ public class EventService {
         event.setDescription(request.description());
         event.setCategory(category);
         event.setLocation(request.location());
+        event.setLatitude(request.latitude());
+        event.setLongitude(request.longitude());
+        event.setAddressDetail(request.addressDetail());
         event.setEventDate(request.eventDate());
         event.setStartTime(request.startTime());
         event.setEndTime(request.endTime());

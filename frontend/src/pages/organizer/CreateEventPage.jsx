@@ -5,6 +5,7 @@ import { Footer } from '../../components/Footer'
 import { createEvent } from '../../api/events'
 import { getCategories } from '../../api/categories'
 import { ArrowLeft, Plus, Trash2, Loader2 } from 'lucide-react'
+import { LocationPickerMap } from '../../components/LocationPickerMap'
 
 export function CreateEventPage() {
   const navigate = useNavigate()
@@ -12,7 +13,7 @@ export function CreateEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
-    title: '', description: '', categoryId: '', location: '',
+    title: '', description: '', categoryId: '', location: '', latitude: null, longitude: null, addressDetail: '',
     eventDate: '', startTime: '', endTime: '', thumbnail: '',
     ticketTypes: [{ name: 'Standard', price: 0, quantity: 100 }],
   })
@@ -41,6 +42,8 @@ export function CreateEventPage() {
       const payload = {
         ...form,
         categoryId: parseInt(form.categoryId),
+        latitude: form.latitude || null,
+        longitude: form.longitude || null,
         ticketTypes: form.ticketTypes.map((t) => ({ ...t, price: parseFloat(t.price), quantity: parseInt(t.quantity) })),
       }
       await createEvent(payload)
@@ -78,20 +81,32 @@ export function CreateEventPage() {
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={4} placeholder="Mô tả chi tiết sự kiện"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Danh mục *</label>
-                <select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)} required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white">
-                  <option value="">Chọn danh mục</option>
-                  {categories.map((c) => <option key={c.categoryId} value={c.categoryId}>{c.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Địa điểm *</label>
-                <input type="text" value={form.location} onChange={(e) => set('location', e.target.value)} required placeholder="Hội trường A, Hà Nội"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none" />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Danh mục *</label>
+              <select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)} required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white">
+                <option value="">Chọn danh mục</option>
+                {categories.map((c) => <option key={c.categoryId} value={c.categoryId}>{c.name}</option>)}
+              </select>
+            </div>
+            <LocationPickerMap
+              value={{ location: form.location, latitude: form.latitude, longitude: form.longitude }}
+              onChange={({ location, latitude, longitude }) =>
+                setForm((f) => ({ ...f, location, latitude, longitude }))
+              }
+            />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Chi tiết địa chỉ
+                <span className="ml-2 text-xs font-normal text-gray-400">(tầng, phòng, tòa nhà...)</span>
+              </label>
+              <input
+                type="text"
+                value={form.addressDetail}
+                onChange={(e) => set('addressDetail', e.target.value)}
+                placeholder="Ví dụ: Tầng 3, Phòng 301, Tòa nhà A"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
