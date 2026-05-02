@@ -1,5 +1,5 @@
 # Báo cáo Tuần 3
-**Tuần:** 3 (11/03/2026 – 17/03/2026)
+**Tuần:** 3 (16/03/2026 – 22/03/2026)
 **Nhóm:** 10
 **Đề tài:** Quản Lý Sự Kiện
 **Nhóm trưởng:** Lê Hữu Lộc – 2254052040
@@ -11,8 +11,8 @@
 | Thành viên | MSSV | Công việc | Link Commit/PR |
 |------------|------|-----------|----------------|
 | Nguyễn Ích Nghĩa | 2251052072 | Cap nhat api doc lan 2 |af747b69b964d699ef86d8152d97e0e7dcf5ac01 |
-| Nguyễn Xuân Khánh | 2251012078 | Add files via upload | b55c89300ec01b9151bd99e9464f4357b2410e7f |
-| Lê Hữu Lộc | 2254052040 | Hoàn thiện sơ đồ use case  |599bcffbfabf664ee5d9b648327080851fd06b71 |
+| Nguyễn Xuân Khánh | 2251012078 | test | a524a26b8ccce02d388f67f3102a0f0fa8ada5cb |
+| Lê Hữu Lộc | 2254052040 | docs: update use case, activity diagrams, and UI design documentation  |4245c25c09f62a65517838b95e4af7dfcae728b5 |
 
 ---
 
