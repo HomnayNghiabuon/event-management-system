@@ -200,6 +200,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             >
               Đăng ký
             </button>
+
+            <div className="pt-6 text-center border-t border-gray-100 mt-6">
+              <button
+                onClick={() => { onClose(); navigate('/admin/login'); }}
+                className="text-sm font-medium text-gray-500 hover:text-purple-600 transition-colors"
+              >
+                Bạn là Quản trị viên (Admin)? Đăng nhập tại đây
+              </button>
+            </div>
           </div>
         )}
 
