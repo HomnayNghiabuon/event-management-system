@@ -1,5 +1,5 @@
 # Báo cáo Tuần 5
-**Tuần:** 5 (25/03/2026 – 31/03/2026)
+**Tuần:** 5 (30/03/2026 – 5/04/2026)
 **Nhóm:** 10
 **Đề tài:** Quản Lý Sự Kiện
 **Nhóm trưởng:** Lê Hữu Lộc – 2254052040
@@ -10,9 +10,10 @@
 
 | Thành viên | MSSV | Công việc | Link Commit/PR |
 |------------|------|-----------|----------------|
-| Nguyễn Ích Nghĩa | 2251052072 | build event management API|41ffe52616e2ccfbc19d55d4f6b00ccda32add9e |
-| Nguyễn Xuân Khánh | 2251012078 |xay dung api dat hang va thanh toan | b4a8feb43f0ec03b6e1374d11cde7e824dfa191d |
-| Lê Hữu Lộc | 2254052040 | - |- |
+| Nguyễn Ích Nghĩa | 2251052072 | Tích hợp API đặt vé/thanh toán (Khanh1) vào event-management-server|a91acaa |
+| Nguyễn Xuân Khánh | 2251012078 |api dat ve thanh toan
+ | 0734b7159f20613e52ed47423e34ffdfd5e7d60f |
+| Lê Hữu Lộc | 2254052040 | feat: add event detail view and ticket booking functionality |210ccf3371f992ffc0b4187f9d8c2aff0fea40dd |
 
 ---
 
