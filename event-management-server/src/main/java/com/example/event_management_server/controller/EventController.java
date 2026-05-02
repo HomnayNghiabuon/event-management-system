@@ -10,14 +10,19 @@ import com.example.event_management_server.repository.EventRepository;
 import com.example.event_management_server.repository.OrderRepository;
 import com.example.event_management_server.repository.TicketRepository;
 import com.example.event_management_server.repository.TicketTypeRepository;
+import com.example.event_management_server.service.EmailService;
 import com.example.event_management_server.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 import java.time.LocalDate;
 
@@ -31,19 +36,22 @@ public class EventController {
     private final TicketRepository ticketRepository;
     private final TicketTypeRepository ticketTypeRepository;
     private final CommissionRepository commissionRepository;
+    private final EmailService emailService;
 
     public EventController(EventService eventService,
                            EventRepository eventRepository,
                            OrderRepository orderRepository,
                            TicketRepository ticketRepository,
                            TicketTypeRepository ticketTypeRepository,
-                           CommissionRepository commissionRepository) {
+                           CommissionRepository commissionRepository,
+                           EmailService emailService) {
         this.eventService = eventService;
         this.eventRepository = eventRepository;
         this.orderRepository = orderRepository;
         this.ticketRepository = ticketRepository;
         this.ticketTypeRepository = ticketTypeRepository;
         this.commissionRepository = commissionRepository;
+        this.emailService = emailService;
     }
 
     // PUBLIC
@@ -205,5 +213,34 @@ public class EventController {
                 totalOrders,
                 checkedIn
         );
+    }
+
+    /**
+     * Gửi email thông báo đến toàn bộ người tham dự của sự kiện.
+     * POST /api/v1/events/{eventId}/notify
+     * Role: ORGANIZER (sự kiện của mình)
+     */
+    @PostMapping("/{eventId}/notify")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    public ResponseEntity<Map<String, Object>> sendNotification(
+            @PathVariable Integer eventId,
+            @Valid @RequestBody EmailNotifyRequest request,
+            @AuthenticationPrincipal User organizer) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+
+        if (!event.getOrganizer().getId().equals(organizer.getId())) {
+            throw new com.example.event_management_server.exception.BadRequestException("Access denied");
+        }
+
+        List<User> recipients = ticketRepository.findAttendeesByEventId(eventId);
+
+        int sent = emailService.sendToAttendees(event, recipients, request.subject(), request.message());
+
+        return ResponseEntity.ok(Map.of(
+                "sent", sent,
+                "total", recipients.size()
+        ));
     }
 }

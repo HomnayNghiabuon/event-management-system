@@ -3,7 +3,7 @@ import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
 import { getMyTickets, fetchQrImage } from '../../api/tickets'
-import { QrCode, CheckCircle, XCircle, Ticket, Loader2 } from 'lucide-react'
+import { QrCode, CheckCircle, XCircle, Ticket, Loader2, Download } from 'lucide-react'
 
 export function MyTicketsPage() {
   const [tickets, setTickets] = useState([])
@@ -39,6 +39,110 @@ export function MyTicketsPage() {
       }
     }
   }, [selectedQr])
+
+  const downloadTicket = async () => {
+    const ticket = selectedQr
+    const canvas = document.createElement('canvas')
+    canvas.width = 700
+    canvas.height = 280
+    const ctx = canvas.getContext('2d')
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 700, 280)
+    grad.addColorStop(0, '#4F46E5')
+    grad.addColorStop(1, '#7C3AED')
+    ctx.fillStyle = grad
+    ctx.beginPath(); ctx.roundRect(0, 0, 700, 280, 16); ctx.fill()
+
+    // White content area (left)
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath(); ctx.roundRect(16, 16, 440, 248, 12); ctx.fill()
+
+    // Right strip (QR area)
+    ctx.fillStyle = 'rgba(255,255,255,0.15)'
+    ctx.beginPath(); ctx.roundRect(472, 16, 212, 248, 12); ctx.fill()
+
+    // Brand
+    ctx.fillStyle = '#7C3AED'
+    ctx.font = 'bold 18px sans-serif'
+    ctx.fillText('BuyTicket', 32, 48)
+
+    // Event title
+    ctx.fillStyle = '#111827'
+    ctx.font = 'bold 16px sans-serif'
+    const title = ticket.eventTitle || 'Sự kiện'
+    const maxW = 400
+    let titleText = title
+    while (ctx.measureText(titleText).width > maxW && titleText.length > 10) {
+      titleText = titleText.slice(0, -1)
+    }
+    if (titleText !== title) titleText += '…'
+    ctx.fillText(titleText, 32, 80)
+
+    // Ticket type badge
+    ctx.fillStyle = '#EDE9FE'
+    ctx.beginPath(); ctx.roundRect(32, 92, ctx.measureText(ticket.ticketTypeName || '').width + 20, 26, 8); ctx.fill()
+    ctx.fillStyle = '#6D28D9'
+    ctx.font = '13px sans-serif'
+    ctx.fillText(ticket.ticketTypeName || '', 42, 110)
+
+    // Attendee label + name
+    ctx.fillStyle = '#6B7280'
+    ctx.font = '12px sans-serif'
+    ctx.fillText('Người tham dự', 32, 148)
+    ctx.fillStyle = '#111827'
+    ctx.font = 'bold 15px sans-serif'
+    ctx.fillText(ticket.attendeeName || '', 32, 168)
+
+    // Ticket ID
+    ctx.fillStyle = '#6B7280'
+    ctx.font = '11px sans-serif'
+    ctx.fillText(`Mã vé: #${ticket.ticketId}`, 32, 200)
+
+    // Status
+    const statusColor = ticket.checkinStatus ? '#059669' : '#2563EB'
+    const statusText = ticket.checkinStatus ? 'Đã check-in' : 'Hợp lệ'
+    ctx.fillStyle = ticket.checkinStatus ? '#D1FAE5' : '#DBEAFE'
+    ctx.beginPath(); ctx.roundRect(32, 212, 110, 28, 8); ctx.fill()
+    ctx.fillStyle = statusColor
+    ctx.font = 'bold 12px sans-serif'
+    ctx.fillText(statusText, 42, 231)
+
+    // Divider dashes
+    ctx.setLineDash([6, 4])
+    ctx.strokeStyle = '#E5E7EB'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(460, 32)
+    ctx.lineTo(460, 248)
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    // QR code image
+    if (qrBlobUrl) {
+      await new Promise((resolve) => {
+        const img = new Image()
+        img.onload = () => {
+          ctx.drawImage(img, 488, 36, 180, 180)
+          resolve()
+        }
+        img.onerror = resolve
+        img.src = qrBlobUrl
+      })
+    }
+
+    // QR label
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '11px monospace'
+    const qrLabel = ticket.qrCode.length > 20 ? ticket.qrCode.slice(0, 20) + '…' : ticket.qrCode
+    const labelW = ctx.measureText(qrLabel).width
+    ctx.fillText(qrLabel, 472 + (212 - labelW) / 2, 238)
+
+    const link = document.createElement('a')
+    link.download = `ticket-${ticket.ticketId}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
 
   const validTickets = tickets.filter((t) => t.isValid)
   const invalidTickets = tickets.filter((t) => !t.isValid)
@@ -112,10 +216,16 @@ export function MyTicketsPage() {
                 <span className="text-sm font-medium">Đã check-in</span>
               </div>
             )}
-            <button onClick={() => setSelectedQr(null)}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold">
-              Đóng
-            </button>
+            <div className="flex gap-3">
+              <button onClick={() => setSelectedQr(null)}
+                className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                Đóng
+              </button>
+              <button onClick={downloadTicket} disabled={qrLoading}
+                className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <Download className="w-4 h-4" /> Tải xuống
+              </button>
+            </div>
           </div>
         </div>
       )}

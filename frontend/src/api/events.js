@@ -26,3 +26,6 @@ export const getEventStats = (id) =>
 
 export const getEventAttendees = (id) =>
   client.get(`/events/${id}/attendees`).then((r) => r.data)
+
+export const sendEventNotification = (id, data) =>
+  client.post(`/events/${id}/notify`, data).then((r) => r.data)

@@ -54,13 +54,16 @@ public class AuthService {
         user.setOrganizationName(request.organizationName());
 
         User saved = userRepository.save(user);
-        String token = jwtService.generateToken(saved);
+        String accessToken  = jwtService.generateToken(saved);
+        String refreshToken = jwtService.generateRefreshToken(saved);
 
         return new RegisterResponse(
                 saved.getId().toString(),
+                saved.getFullName(),
                 saved.getEmail(),
                 saved.getRole().name(),
-                token
+                accessToken,
+                refreshToken
         );
     }
 

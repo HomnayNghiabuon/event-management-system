@@ -32,9 +32,11 @@ export function AuthProvider({ children }) {
     setLoading(true)
     try {
       const data = await apiRegister(formData)
-      localStorage.setItem('accessToken', data.token)
-      localStorage.setItem('user', JSON.stringify({ userId: data.userId, email: data.email, role: data.role }))
-      setUser({ userId: data.userId, email: data.email, role: data.role })
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('refreshToken', data.refreshToken)
+      const userObj = { userId: data.userId, fullName: data.fullName, email: data.email, role: data.role }
+      localStorage.setItem('user', JSON.stringify(userObj))
+      setUser(userObj)
       return data
     } finally {
       setLoading(false)

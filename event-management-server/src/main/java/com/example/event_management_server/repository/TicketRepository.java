@@ -60,4 +60,16 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     @org.springframework.data.jpa.repository.Modifying
     @Query("UPDATE Ticket t SET t.isValid = false WHERE t.orderDetail.order.orderId = :orderId")
     int invalidateByOrderId(@Param("orderId") Integer orderId);
+
+    @Query("""
+        SELECT DISTINCT t.attendee FROM Ticket t
+        JOIN t.orderDetail od
+        JOIN od.order o
+        JOIN o.ticketReservation r
+        JOIN r.ticketType tt
+        WHERE tt.event.eventId = :eventId
+          AND t.attendee IS NOT NULL
+          AND t.isValid = true
+        """)
+    List<com.example.event_management_server.model.User> findAttendeesByEventId(@Param("eventId") Integer eventId);
 }

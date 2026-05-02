@@ -23,8 +23,9 @@ export function RegisterPage() {
         payload.phone = form.phone
         payload.organizationName = form.organizationName
       }
-      await register(payload)
-      navigate('/')
+      const data = await register(payload)
+      if (data.role === 'ORGANIZER') navigate('/organizer')
+      else navigate('/')
     } catch (err) {
       setError(err.response?.data?.error || 'Đăng ký thất bại. Email có thể đã tồn tại.')
     } finally {

@@ -3,6 +3,8 @@ package com.example.event_management_server.dto;
 import com.example.event_management_server.model.PaymentMethod;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public class PurchaseRequestDTO {
 
     @NotNull(message = "reservationId is required")
@@ -11,19 +13,14 @@ public class PurchaseRequestDTO {
     @NotNull(message = "paymentMethod is required")
     private PaymentMethod paymentMethod;
 
-    public Integer getReservationId() {
-        return reservationId;
-    }
+    private List<String> attendeeNames;
 
-    public void setReservationId(Integer reservationId) {
-        this.reservationId = reservationId;
-    }
+    public Integer getReservationId() { return reservationId; }
+    public void setReservationId(Integer reservationId) { this.reservationId = reservationId; }
 
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
 
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
+    public List<String> getAttendeeNames() { return attendeeNames; }
+    public void setAttendeeNames(List<String> attendeeNames) { this.attendeeNames = attendeeNames; }
 }

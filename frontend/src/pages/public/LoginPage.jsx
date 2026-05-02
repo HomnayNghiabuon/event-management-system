@@ -43,16 +43,6 @@ export function LoginPage() {
           <p className="text-gray-500 mt-1 text-sm">Chào mừng bạn quay lại!</p>
         </div>
 
-        {/* Demo accounts */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-          <p className="text-xs text-blue-800 font-semibold mb-2">Tài khoản demo (password: 123456)</p>
-          <div className="space-y-1 text-xs text-blue-700">
-            <p>👤 <span className="font-mono">attendee@eventms.com</span> - Người tham dự</p>
-            <p>🎯 <span className="font-mono">organizer@eventms.com</span> - Organizer</p>
-            <p>🔑 <span className="font-mono">admin@eventms.com</span> - Admin</p>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>

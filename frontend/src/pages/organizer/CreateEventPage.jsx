@@ -1,26 +1,52 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { createEvent } from '../../api/events'
 import { getCategories } from '../../api/categories'
-import { ArrowLeft, Plus, Trash2, Loader2 } from 'lucide-react'
+import { uploadImage } from '../../api/upload'
+import { ArrowLeft, Plus, Trash2, Loader2, ImagePlus, X } from 'lucide-react'
 import { LocationPickerMap } from '../../components/LocationPickerMap'
 
 export function CreateEventPage() {
   const navigate = useNavigate()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     title: '', description: '', categoryId: '', location: '', latitude: null, longitude: null, addressDetail: '',
     eventDate: '', startTime: '', endTime: '', thumbnail: '',
     ticketTypes: [{ name: 'Standard', price: 0, quantity: 100 }],
   })
+  const [previewUrl, setPreviewUrl] = useState('')
+  const fileInputRef = useRef(null)
 
   useEffect(() => { getCategories().then(setCategories).catch(() => {}) }, [])
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }))
+
+  const handleImageSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPreviewUrl(URL.createObjectURL(file))
+    setUploading(true)
+    try {
+      const url = await uploadImage(file)
+      set('thumbnail', url)
+    } catch {
+      setError('Upload ảnh thất bại')
+      setPreviewUrl('')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const clearImage = () => {
+    setPreviewUrl('')
+    set('thumbnail', '')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const setTicket = (idx, field, value) => {
     setForm((f) => {
@@ -126,10 +152,32 @@ export function CreateEventPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">URL ảnh thumbnail</label>
-              <input type="url" value={form.thumbnail} onChange={(e) => set('thumbnail', e.target.value)} placeholder="https://..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none" />
-              {form.thumbnail && <img src={form.thumbnail} alt="preview" className="mt-2 h-32 w-full object-cover rounded-lg" onError={(e) => e.target.style.display='none'} />}
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Ảnh thumbnail</label>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+              {previewUrl || form.thumbnail ? (
+                <div className="relative mt-1">
+                  <img src={previewUrl || form.thumbnail} alt="preview"
+                    className="w-full h-48 object-cover rounded-xl border border-gray-200" />
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl">
+                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    </div>
+                  )}
+                  {!uploading && (
+                    <button type="button" onClick={clearImage}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button type="button" onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-36 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-purple-400 hover:text-purple-500 hover:bg-purple-50 transition-all">
+                  <ImagePlus className="w-8 h-8" />
+                  <span className="text-sm font-medium">Chọn ảnh từ máy</span>
+                  <span className="text-xs">PNG, JPG, WEBP tối đa 10MB</span>
+                </button>
+              )}
             </div>
           </div>
 

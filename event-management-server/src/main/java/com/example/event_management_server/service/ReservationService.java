@@ -27,19 +27,22 @@ public class ReservationService {
     private final OrderDetailRepository orderDetailRepository;
     private final TicketRepository ticketRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     public ReservationService(TicketTypeRepository ticketTypeRepository,
                               TicketReservationRepository ticketReservationRepository,
                               OrderRepository orderRepository,
                               OrderDetailRepository orderDetailRepository,
                               TicketRepository ticketRepository,
-                              NotificationService notificationService) {
+                              NotificationService notificationService,
+                              EmailService emailService) {
         this.ticketTypeRepository = ticketTypeRepository;
         this.ticketReservationRepository = ticketReservationRepository;
         this.orderRepository = orderRepository;
         this.orderDetailRepository = orderDetailRepository;
         this.ticketRepository = ticketRepository;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -67,24 +70,6 @@ public class ReservationService {
         TicketType ttWithEvent = ticketTypeRepository.findByIdWithEvent(ticketType.getTicketTypeId())
                 .orElse(ticketType);
         String eventTitle = ttWithEvent.getEvent() != null ? ttWithEvent.getEvent().getTitle() : null;
-
-        // Vé miễn phí: tự động tạo order và tickets ngay, không cần bước purchase
-        if (BigDecimal.ZERO.compareTo(ticketType.getPrice()) == 0) {
-            PurchaseRequestDTO freeRequest = new PurchaseRequestDTO();
-            freeRequest.setReservationId(saved.getReservationId());
-            freeRequest.setPaymentMethod(PaymentMethod.CASH);
-            processPayment(freeRequest, user);
-
-            return new ReservationResponseDTO(
-                    saved.getReservationId(),
-                    ttWithEvent.getTicketTypeId(),
-                    ttWithEvent.getName(),
-                    eventTitle,
-                    saved.getQuantity(),
-                    ReservationStatus.PAID.name(),
-                    saved.getExpiresAt()
-            );
-        }
 
         return new ReservationResponseDTO(
                 saved.getReservationId(),
@@ -142,12 +127,17 @@ public class ReservationService {
         detail.setPrice(reservation.getTicketType().getPrice());
         OrderDetail savedDetail = orderDetailRepository.save(detail);
 
+        List<String> attendeeNames = request.getAttendeeNames();
         List<Ticket> tickets = new ArrayList<>();
         for (int i = 0; i < reservation.getQuantity(); i++) {
             Ticket ticket = new Ticket();
             ticket.setOrderDetail(savedDetail);
             ticket.setAttendee(user);
-            ticket.setAttendeeName(user.getFullName());
+            String name = (attendeeNames != null && i < attendeeNames.size()
+                    && attendeeNames.get(i) != null && !attendeeNames.get(i).isBlank())
+                    ? attendeeNames.get(i).trim()
+                    : user.getFullName();
+            ticket.setAttendeeName(name);
             ticket.setQrCode(UUID.randomUUID().toString());
             ticket.setCheckinStatus(false);
             tickets.add(ticketRepository.save(ticket));
@@ -166,6 +156,10 @@ public class ReservationService {
         List<OrderResponse.TicketInfo> ticketInfos = tickets.stream()
                 .map(t -> new OrderResponse.TicketInfo(t.getTicketId(), t.getQrCode(), t.getAttendeeName(), t.getCheckinStatus()))
                 .toList();
+
+        // Gửi email xác nhận bất đồng bộ (không block response)
+        List<String> qrCodes = tickets.stream().map(Ticket::getQrCode).toList();
+        emailService.sendOrderConfirmation(user, eventTitle, reservation.getQuantity(), savedOrder.getOrderId(), qrCodes);
 
         return OrderResponse.from(savedOrder, ticketInfos);
     }

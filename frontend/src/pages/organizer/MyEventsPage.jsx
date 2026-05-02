@@ -3,8 +3,8 @@ import { Link } from 'react-router'
 import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
-import { getMyEvents, publishEvent, deleteEvent } from '../../api/events'
-import { Plus, Calendar, MapPin, Eye, Edit, Trash2, BarChart2, Users, Loader2 } from 'lucide-react'
+import { getMyEvents, publishEvent, deleteEvent, sendEventNotification } from '../../api/events'
+import { Plus, Calendar, MapPin, Eye, Edit, Trash2, BarChart2, Users, Loader2, Mail, X, Send, CheckCircle } from 'lucide-react'
 
 const VND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
@@ -24,6 +24,11 @@ export function MyEventsPage() {
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [actionId, setActionId] = useState(null)
+  const [notifyEvent, setNotifyEvent] = useState(null)
+  const [notifyForm, setNotifyForm] = useState({ subject: '', message: '' })
+  const [notifySending, setNotifySending] = useState(false)
+  const [notifyResult, setNotifyResult] = useState(null)
+  const [notifyError, setNotifyError] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -45,6 +50,27 @@ export function MyEventsPage() {
       alert(err.response?.data?.error || 'Không thể thực hiện thao tác')
     } finally {
       setActionId(null)
+    }
+  }
+
+  const openNotify = (event) => {
+    setNotifyEvent(event)
+    setNotifyForm({ subject: `Thông báo về sự kiện: ${event.title}`, message: '' })
+    setNotifyResult(null)
+    setNotifyError('')
+  }
+
+  const handleNotify = async (e) => {
+    e.preventDefault()
+    setNotifyError('')
+    setNotifySending(true)
+    try {
+      const result = await sendEventNotification(notifyEvent.eventId, notifyForm)
+      setNotifyResult(result)
+    } catch (err) {
+      setNotifyError(err.response?.data?.error || 'Gửi thất bại')
+    } finally {
+      setNotifySending(false)
     }
   }
 
@@ -144,6 +170,10 @@ export function MyEventsPage() {
                             {event.status === 'PUBLISHED' ? 'Ẩn' : 'Publish'}
                           </button>
                         )}
+                        <button onClick={() => openNotify(event)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 text-xs font-medium transition-all">
+                          <Mail className="w-3.5 h-3.5" /> Thông báo
+                        </button>
                         <button onClick={() => handleDelete(event.eventId)} disabled={actionId === event.eventId}
                           className="flex items-center gap-1.5 px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 text-xs font-medium transition-all">
                           <Trash2 className="w-3.5 h-3.5" /> Xóa
@@ -168,6 +198,82 @@ export function MyEventsPage() {
         )}
       </main>
       <Footer />
+
+      {/* Notify Modal */}
+      {notifyEvent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Mail className="w-5 h-5 text-indigo-500" /> Gửi thông báo
+              </h3>
+              <button onClick={() => setNotifyEvent(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4 bg-gray-50 rounded-lg px-3 py-2 truncate">
+              Sự kiện: <span className="font-medium text-gray-700">{notifyEvent.title}</span>
+            </p>
+
+            {notifyResult ? (
+              <div className="text-center py-6">
+                <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
+                <p className="text-lg font-bold text-gray-900">Gửi thành công!</p>
+                <p className="text-gray-500 mt-1">
+                  Đã xử lý <span className="font-semibold text-indigo-600">{notifyResult.sent}</span> / {notifyResult.total} người tham dự
+                </p>
+                {notifyResult.total === 0 && (
+                  <p className="text-sm text-yellow-600 mt-2">Sự kiện chưa có người mua vé.</p>
+                )}
+                <button onClick={() => setNotifyEvent(null)}
+                  className="mt-4 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-all">
+                  Đóng
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleNotify} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tiêu đề *</label>
+                  <input
+                    type="text"
+                    value={notifyForm.subject}
+                    onChange={(e) => setNotifyForm({ ...notifyForm, subject: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nội dung *</label>
+                  <textarea
+                    value={notifyForm.message}
+                    onChange={(e) => setNotifyForm({ ...notifyForm, message: e.target.value })}
+                    required
+                    rows={5}
+                    placeholder="Nhập nội dung thông báo gửi đến người tham dự..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none text-sm"
+                  />
+                </div>
+                {notifyError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-red-600 text-sm">{notifyError}</p>
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setNotifyEvent(null)}
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all">
+                    Hủy
+                  </button>
+                  <button type="submit" disabled={notifySending}
+                    className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+                    {notifySending ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang gửi...</> : <><Send className="w-4 h-4" /> Gửi thông báo</>}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
