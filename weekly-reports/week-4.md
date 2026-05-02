@@ -1,5 +1,5 @@
 # Báo cáo Tuần 4
-**Tuần:** 4 (18/03/2026 – 24/03/2026)
+**Tuần:** 4 (23/03/2026 – 29/03/2026)
 **Nhóm:** 10
 **Đề tài:** Quản Lý Sự Kiện
 **Nhóm trưởng:** Lê Hữu Lộc – 2254052040
@@ -10,10 +10,9 @@
 
 | Thành viên | MSSV | Công việc | Link Commit/PR |
 |------------|------|-----------|----------------|
-| Nguyễn Ích Nghĩa | 2251052072 | resolve merge conflict, keep dev version
- |fe203ce1d870cef2b104aa09775fee64d773edf2 |
-| Nguyễn Xuân Khánh | 2251012078 |Week 3 - Viet Entity va Database | 0bbe74144ad3efa5b6d81969fa83f783f52cb545 |
-| Lê Hữu Lộc | 2254052040 | docs: update use case diagram; add Organizer features (login, register, create event, view ticket list, check-in QR, ticket reports, email notifications)  |1eec86118e2be2d7b725f0e456eef12241dacdbe |
+| Nguyễn Ích Nghĩa | 2251052072 | -| - |
+| Nguyễn Xuân Khánh | 2251012078 |xay dung api dat hang va thanh toan | 1e945b99fb977975b6daf05eaac6964b4047fa50 |
+| Lê Hữu Lộc | 2254052040 | - | - |
 
 ---
 
