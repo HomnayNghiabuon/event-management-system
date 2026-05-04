@@ -190,16 +190,17 @@ public class EventController {
         long totalOrders      = orderRepository.countPaidOrdersByEventId(eventId);
         long checkedIn        = ticketRepository.countCheckedInByEventId(eventId);
 
-        // Tính commission từ rate đang active
+        // Lấy commission rate đang active (mới nhất theo effectiveFrom); fallback ZERO nếu chưa cấu hình
         java.math.BigDecimal commissionPct = commissionRepository
                 .findFirstByIsActiveTrueOrderByEffectiveFromDesc()
                 .map(Commission::getPercent)
                 .orElse(java.math.BigDecimal.ZERO);
 
+        // commissionAmt = revenue * commissionPct / 100, làm tròn HALF_UP đến 2 chữ số thập phân
         java.math.BigDecimal commissionAmt = revenue
                 .multiply(commissionPct)
                 .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-        java.math.BigDecimal netRevenue = revenue.subtract(commissionAmt);
+        java.math.BigDecimal netRevenue = revenue.subtract(commissionAmt); // doanh thu thực sau khi trừ hoa hồng
 
         return new EventStatsResponse(
                 eventId,

@@ -36,11 +36,16 @@ public class TicketReservation {
     @Column(length = 20)
     private ReservationStatus status;
 
+    /**
+     * Chạy tự động trước khi INSERT vào DB.
+     * expiresAt = reservedAt + 600 giây (10 phút) — thời gian giữ vé.
+     * ReservationCleanupTask chạy mỗi 60s để dọn các reservation PENDING đã quá expiresAt.
+     */
     @PrePersist
     protected void onCreate() {
         this.reservedAt = Instant.now();
         if (this.expiresAt == null) {
-            this.expiresAt = this.reservedAt.plusSeconds(600);
+            this.expiresAt = this.reservedAt.plusSeconds(600); // 10 phút giữ chỗ
         }
         if (this.status == null) {
             this.status = ReservationStatus.PENDING;
@@ -70,6 +75,7 @@ public class TicketReservation {
     public ReservationStatus getStatus() { return status; }
     public void setStatus(ReservationStatus status) { this.status = status; }
 
+    /** Kiểm tra reservation đã hết hạn chưa (so sánh thời điểm hiện tại với expiresAt). */
     public boolean isExpired() {
         return Instant.now().isAfter(this.expiresAt);
     }

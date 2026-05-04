@@ -21,6 +21,10 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
 
+    /**
+     * Tạo và lưu một thông báo cho user.
+     * Được gọi từ ReservationService (sau khi đặt vé / thanh toán thành công) và AdminService (duyệt sự kiện).
+     */
     public void send(User user, String title, String message, String type) {
         Notification n = Notification.builder()
                 .user(user)
@@ -32,6 +36,7 @@ public class NotificationService {
         notificationRepository.save(n);
     }
 
+    /** Lấy danh sách thông báo của user, sắp xếp mới nhất trước (readOnly để tối ưu transaction). */
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getMyNotifications(User user, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -40,11 +45,16 @@ public class NotificationService {
         return notifications.map(NotificationResponse::from);
     }
 
+    /** Đếm số thông báo chưa đọc — dùng cho badge số trên UI. */
     @Transactional(readOnly = true)
     public long countUnread(User user) {
         return notificationRepository.countByUser_IdAndIsRead(user.getId(), false);
     }
 
+    /**
+     * Đánh dấu một thông báo đã đọc.
+     * Kiểm tra quyền sở hữu (user chỉ được đánh dấu thông báo của chính mình) — 403 nếu vi phạm.
+     */
     public void markRead(Integer notificationId, User user) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Thông báo không tồn tại"));
@@ -55,6 +65,7 @@ public class NotificationService {
         notificationRepository.save(n);
     }
 
+    /** Bulk UPDATE: đánh dấu tất cả thông báo của user là đã đọc trong một query duy nhất. */
     public void markAllRead(User user) {
         notificationRepository.markAllReadByUser(user.getId());
     }

@@ -12,6 +12,11 @@ import java.util.Optional;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Integer> {
+
+    /**
+     * Lấy tất cả vé của một attendee, kèm JOIN FETCH để tránh N+1 query.
+     * Trả về đầy đủ thông tin: ticket → orderDetail → ticketType → event.
+     */
     @Query("""
         SELECT t FROM Ticket t
         JOIN FETCH t.orderDetail od
@@ -21,9 +26,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
         ORDER BY t.ticketId DESC
         """)
     List<Ticket> findByAttendee_Id(@Param("attendeeId") java.util.UUID attendeeId);
+
+    /** Tìm vé theo mã QR — dùng khi check-in để xác minh vé hợp lệ. */
     @Query("SELECT t FROM Ticket t JOIN FETCH t.orderDetail od JOIN FETCH od.ticketType tt JOIN FETCH tt.event WHERE t.qrCode = :qrCode")
     Optional<Ticket> findByQrCode(@Param("qrCode") String qrCode);
 
+    /** Lấy tất cả vé của một sự kiện (qua chuỗi join: ticket → orderDetail → order → reservation → ticketType → event). */
     @Query("""
         SELECT t FROM Ticket t
         JOIN t.orderDetail od
@@ -34,6 +42,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
         """)
     List<Ticket> findByEventId(@Param("eventId") Integer eventId);
 
+    /** Đếm số vé hợp lệ (isValid=true) của sự kiện — dùng cho thống kê ticketsSold. */
     @Query("""
         SELECT COUNT(t) FROM Ticket t
         JOIN t.orderDetail od
@@ -44,6 +53,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
         """)
     long countByEventId(@Param("eventId") Integer eventId);
 
+    /** Đếm số vé đã check-in và còn hợp lệ — dùng cho thống kê checkedIn. */
     @Query("""
         SELECT COUNT(t) FROM Ticket t
         JOIN t.orderDetail od
@@ -57,10 +67,19 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     @Query("SELECT t FROM Ticket t WHERE t.orderDetail.order.orderId = :orderId")
     List<Ticket> findByOrderId(@Param("orderId") Integer orderId);
 
+    /**
+     * Bulk UPDATE: đánh dấu toàn bộ vé của một order là isValid=false trong một câu query duy nhất.
+     * @Modifying bắt buộc với UPDATE/DELETE JPQL. Hiệu quả hơn load từng ticket rồi set từng cái.
+     */
     @org.springframework.data.jpa.repository.Modifying
     @Query("UPDATE Ticket t SET t.isValid = false WHERE t.orderDetail.order.orderId = :orderId")
     int invalidateByOrderId(@Param("orderId") Integer orderId);
 
+    /**
+     * Lấy danh sách DISTINCT attendee (User) có vé hợp lệ của sự kiện.
+     * Dùng bởi EventController.sendNotification() để gửi email hàng loạt.
+     * AND t.attendee IS NOT NULL: bỏ qua vé ẩn danh (không có tài khoản).
+     */
     @Query("""
         SELECT DISTINCT t.attendee FROM Ticket t
         JOIN t.orderDetail od

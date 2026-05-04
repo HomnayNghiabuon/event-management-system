@@ -87,21 +87,25 @@ public class Event {
     public Event() {}
 
     // ===== Lifecycle =====
+
+    /** Tự động set createdAt và approvalStatus=PENDING trước INSERT. */
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
         if (this.approvalStatus == null) {
-            this.approvalStatus = "PENDING";
+            this.approvalStatus = "PENDING"; // mặc định chờ admin duyệt
         }
         validateTime();
     }
 
+    /** Cập nhật updatedAt trước mỗi UPDATE. */
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = Instant.now();
         validateTime();
     }
 
+    /** Validate startTime < endTime ở tầng model — bảo vệ toàn vẹn dữ liệu ngay cả khi service bỏ qua. */
     private void validateTime() {
         if (startTime != null && endTime != null && startTime.isAfter(endTime)) {
             throw new IllegalArgumentException("startTime phải trước endTime");

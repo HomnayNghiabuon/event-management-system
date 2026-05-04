@@ -48,13 +48,16 @@ public class User implements UserDetails {
         this.createdAt = LocalDateTime.now();
     }
 
-    // UserDetails implementation
+    // ===== UserDetails implementation =====
+
+    /** Trả về quyền của user: "ROLE_ADMIN", "ROLE_ORGANIZER", hoặc "ROLE_ATTENDEE". */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        // ROLE_ prefix bắt buộc để @PreAuthorize("hasRole('ADMIN')") hoạt động
     }
-    // -> return a collection has type is subclass of GrantedAuthority
 
+    /** Spring Security dùng email làm username (không phải trường username thông thường). */
     @Override
     public String getUsername() {
         return email;
@@ -62,17 +65,18 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return true; // tài khoản không có ngày hết hạn
     }
 
+    /** Tài khoản bị khóa khi active=false (admin setUserActive(id, false)). */
     @Override
     public boolean isAccountNonLocked() {
-        return active;
+        return active; // false → Spring Security từ chối đăng nhập với LockedException
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return true; // password không có ngày hết hạn
     }
 
     @Override
