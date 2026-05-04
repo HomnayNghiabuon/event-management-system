@@ -207,6 +207,10 @@ public class AdminService {
 
     // DASHBOARD STATS
 
+    /**
+     * Trả về các số liệu tổng quan cho Admin Dashboard.
+     * Thực hiện 8 câu query riêng biệt — chấp nhận được vì dashboard không cần real-time tuyệt đối.
+     */
     @Transactional(readOnly = true)
     public DashboardStats getDashboardStats() {
         return new DashboardStats(
@@ -223,6 +227,10 @@ public class AdminService {
 
     // USER BLOCK / UNBLOCK
 
+    /**
+     * Khóa hoặc mở khóa tài khoản user.
+     * User bị khóa (active=false) sẽ bị từ chối bởi isAccountNonLocked() trong UserDetails.
+     */
     public void setUserActive(UUID userId, boolean active) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User không tồn tại: " + userId));
@@ -243,6 +251,7 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không có commission đang active"));
     }
 
+    /** Tạo commission mới và đặt isActive=true. Commission cũ không tự động bị deactivate. */
     public Commission createCommission(java.math.BigDecimal percent, java.time.Instant effectiveFrom) {
         Commission c = new Commission();
         c.setPercent(percent);

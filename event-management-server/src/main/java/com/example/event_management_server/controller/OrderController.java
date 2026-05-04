@@ -71,6 +71,8 @@ public class OrderController {
     /**
      * Huỷ đơn hàng đã PAID và hoàn trả số lượng vé.
      * POST /api/v1/orders/{orderId}/cancel
+     * Các bước: đánh dấu order CANCELLED → invalidate tất cả tickets (bulk UPDATE) → hoàn trả quantity.
+     * invalidateByOrderId: dùng @Query UPDATE thay vì load từng ticket → tối ưu cho đơn nhiều vé.
      */
     @PostMapping("/{orderId}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -94,14 +96,14 @@ public class OrderController {
         order.setPaymentStatus("CANCELLED");
         orderRepository.save(order);
 
-        // Vô hiệu hóa tất cả tickets của đơn hàng này
+        // Bulk UPDATE: UPDATE tickets SET is_valid=false WHERE order_detail_id IN (SELECT ... WHERE order_id=?)
         ticketRepository.invalidateByOrderId(orderId);
 
         TicketReservation reservation = order.getTicketReservation();
         if (reservation != null) {
             reservation.setStatus(com.example.event_management_server.model.ReservationStatus.CANCELLED);
             TicketType ticketType = reservation.getTicketType();
-            ticketType.setQuantity(ticketType.getQuantity() + reservation.getQuantity());
+            ticketType.setQuantity(ticketType.getQuantity() + reservation.getQuantity()); // hoàn trả vé
             ticketTypeRepository.save(ticketType);
             ticketReservationRepository.save(reservation);
         }

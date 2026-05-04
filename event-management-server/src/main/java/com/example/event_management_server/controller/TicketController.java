@@ -90,6 +90,8 @@ public class TicketController {
     /**
      * Check-in người tham dự bằng QR code string.
      * POST /api/v1/tickets/{qrCode}/checkin
+     * Trả về { success: boolean, message } thay vì HTTP error để frontend có thể hiển thị thông báo rõ ràng.
+     * Admin bypass quyền kiểm tra organizer — có thể check-in cho bất kỳ sự kiện nào.
      */
     @PostMapping("/tickets/{qrCode}/checkin")
     @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
@@ -100,6 +102,7 @@ public class TicketController {
         Ticket ticket = ticketRepository.findByQrCode(qrCode)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "QR code không hợp lệ"));
 
+        // Trả success:false thay vì throw exception để frontend UI hiển thị message thân thiện
         if (Boolean.FALSE.equals(ticket.getIsValid())) {
             return new CheckinResponse(false, "Vé đã bị hủy, không thể check-in", null, ticket.getAttendeeName());
         }
@@ -110,6 +113,7 @@ public class TicketController {
 
         boolean isAdmin = isAdmin(user);
         if (!isAdmin) {
+            // Organizer chỉ được check-in vé của sự kiện mình tổ chức
             Event event = ticket.getOrderDetail().getTicketType().getEvent();
             if (event.getOrganizer() == null || !event.getOrganizer().getId().equals(user.getId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền check-in cho sự kiện này");

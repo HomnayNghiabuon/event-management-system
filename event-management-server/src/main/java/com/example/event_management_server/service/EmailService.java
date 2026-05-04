@@ -35,8 +35,14 @@ public class EmailService {
 
     // ── Organizer blast ───────────────────────────────────────────
 
+    /**
+     * Gửi email thông báo hàng loạt từ Organizer đến tất cả Attendee của sự kiện.
+     * Nếu SMTP chưa cấu hình: bỏ qua việc gửi mail, chỉ lưu log vào DB.
+     * Lỗi gửi cho từng recipient được bắt riêng lẻ — không dừng toàn bộ batch.
+     */
     @Transactional
     public int sendToAttendees(Event event, List<User> recipients, String subject, String body) {
+        // mailSender là null nếu spring.mail.host không được cấu hình (required=false)
         boolean mailConfigured = mailSender != null && mailFrom != null && !mailFrom.isBlank();
         log.info("sendToAttendees: mailConfigured={}, recipients={}", mailConfigured, recipients.size());
 
@@ -61,6 +67,11 @@ public class EmailService {
 
     // ── Ticket purchase confirmation ──────────────────────────────
 
+    /**
+     * Gửi email xác nhận đặt vé cho user sau khi thanh toán thành công.
+     * @Async: chạy trong thread pool riêng, không block HTTP response trả về cho client.
+     * Lỗi gửi mail được log nhưng không làm thất bại transaction mua vé.
+     */
     @Async
     public void sendOrderConfirmation(User user, String eventTitle, int quantity, long orderId, List<String> qrCodes) {
         boolean mailConfigured = mailSender != null && mailFrom != null && !mailFrom.isBlank();

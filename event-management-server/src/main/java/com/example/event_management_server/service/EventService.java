@@ -130,6 +130,8 @@ public class EventService {
 
     /**
      * Cập nhật sự kiện (ORGANIZER – chỉ sự kiện của mình, trạng thái DRAFT).
+     * Xóa toàn bộ TicketType cũ và tạo lại từ request (không update từng cái).
+     * Nếu event bị REJECTED → tự động reset approvalStatus về PENDING để admin duyệt lại.
      */
     public EventResponse updateEvent(Integer eventId, EventRequest request, User organizer) {
         validateEventTimes(request);
@@ -193,7 +195,7 @@ public class EventService {
 
     /**
      * Xoá sự kiện (ORGANIZER – chỉ sự kiện của mình; ADMIN – bất kỳ).
-     * Logic phân quyền giữa ORGANIZER và ADMIN được xử lý ở Controller.
+     * Không cho phép xóa nếu đã có reservation hoặc order để tránh mất dữ liệu lịch sử.
      */
     public void deleteEvent(Integer eventId, User user) {
         Event event = findEventOrThrow(eventId);
@@ -205,6 +207,7 @@ public class EventService {
             checkOwnership(event, user.getId());
         }
 
+        // Chặn xóa nếu có reservation hoặc order đã tạo cho sự kiện này
         if (ticketReservationRepository.countByTicketType_Event_EventId(eventId) > 0
                 || orderDetailRepository.countByEventId(eventId) > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -271,11 +274,12 @@ public class EventService {
         return ticketTypeRepository.saveAll(list);
     }
 
+    /** Cập nhật minPrice của event = giá thấp nhất trong danh sách ticket types. */
     private void updateMinPrice(Event event, List<TicketType> ticketTypes) {
         BigDecimal min = ticketTypes.stream()
                 .map(TicketType::getPrice)
                 .min(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO); // fallback nếu không có ticket type nào
         event.setMinPrice(min);
         eventRepository.save(event);
     }

@@ -23,17 +23,23 @@ public class ReservationCleanupTask {
         this.ticketTypeRepository = ticketTypeRepository;
     }
 
-    // Chạy mỗi 60 giây
+    /**
+     * Scheduled job chạy mỗi 60 giây để dọn dẹp reservation hết hạn.
+     * fixedDelay: tính từ lúc lần chạy trước kết thúc (khác fixedRate tính từ lúc bắt đầu).
+     * Hoàn trả quantity về TicketType để user khác có thể mua.
+     * Đảm bảo vé không bị "kẹt" nếu user bỏ giữa chừng mà không hủy reservation.
+     */
     @Scheduled(fixedDelay = 60_000)
     @Transactional
     public void expireStaleReservations() {
+        // Tìm tất cả reservation PENDING có expiresAt < now
         List<TicketReservation> expired =
                 reservationRepository.findExpiredPendingReservations(Instant.now());
 
         for (TicketReservation r : expired) {
             r.setStatus(ReservationStatus.EXPIRED);
             var ticketType = r.getTicketType();
-            ticketType.setQuantity(ticketType.getQuantity() + r.getQuantity());
+            ticketType.setQuantity(ticketType.getQuantity() + r.getQuantity()); // hoàn trả số lượng vé
             ticketTypeRepository.save(ticketType);
             reservationRepository.save(r);
         }

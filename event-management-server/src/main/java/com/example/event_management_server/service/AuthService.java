@@ -27,6 +27,12 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
+    /**
+     * Đăng ký tài khoản mới (ATTENDEE hoặc ORGANIZER).
+     * Không cho phép tự đăng ký ADMIN — admin chỉ được tạo bởi admin khác.
+     * ORGANIZER bắt buộc có phone và organizationName.
+     * Password được hash bằng BCrypt trước khi lưu.
+     */
     public RegisterResponse register(RegisterRequest request) {
         if (request.role() == Role.ADMIN) {
             throw new IllegalArgumentException("Không thể tự đăng ký tài khoản ADMIN");
@@ -48,7 +54,7 @@ public class AuthService {
         User user = new User();
         user.setFullName(request.fullName());
         user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPassword(passwordEncoder.encode(request.password())); // BCrypt hash, không lưu plain text
         user.setRole(request.role());
         user.setPhone(request.phone());
         user.setOrganizationName(request.organizationName());
@@ -67,7 +73,13 @@ public class AuthService {
         );
     }
 
+    /**
+     * Đăng nhập bằng email và password.
+     * authenticationManager.authenticate() tự ném BadCredentialsException nếu sai thông tin.
+     * Trả về cả access token (1h) và refresh token (7 ngày).
+     */
     public LoginResponse login(LoginRequest request) {
+        // Xác thực qua Spring Security — ném exception nếu sai email/password hoặc tài khoản bị khóa
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );

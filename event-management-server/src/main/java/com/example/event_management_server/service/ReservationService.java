@@ -45,8 +45,14 @@ public class ReservationService {
         this.emailService = emailService;
     }
 
+    /**
+     * Tạm giữ vé cho user trong 10 phút (expiresAt được set tự động bởi @PrePersist trong TicketReservation).
+     * Dùng SELECT FOR UPDATE (findByIdForUpdate) để tránh race condition khi nhiều user cùng mua.
+     * Giảm quantity ngay lập tức — nếu hết hạn, ReservationCleanupTask sẽ hoàn trả.
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReservationResponseDTO reserveTicket(ReservationRequestDTO request, User user) {
+        // SELECT FOR UPDATE: khóa row này lại, các transaction khác phải chờ → tránh oversell
         TicketType ticketType = ticketTypeRepository.findByIdForUpdate(request.getTicketTypeId())
                 .orElseThrow(() -> new NotFoundException("Ticket type not found"));
 
@@ -82,8 +88,14 @@ public class ReservationService {
         );
     }
 
+    /**
+     * Hoàn tất thanh toán: tạo Order, OrderDetail và Ticket (mỗi vé có qrCode là UUID riêng).
+     * Idempotent: nếu reservation đã PAID (double-submit), trả về order hiện có thay vì tạo mới.
+     * Gửi notification trong app và email xác nhận bất đồng bộ (@Async).
+     */
     @Transactional(rollbackFor = Exception.class)
     public OrderResponse processPayment(PurchaseRequestDTO request, User user) {
+        // SELECT FOR UPDATE để tránh double-payment race condition
         TicketReservation reservation = ticketReservationRepository
                 .findByIdForUpdate(request.getReservationId())
                 .orElseThrow(() -> new NotFoundException("Reservation không tồn tại"));
@@ -92,6 +104,7 @@ public class ReservationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền thanh toán reservation này");
         }
 
+        // Idempotency: nếu đã thanh toán rồi (gọi lại lần 2) → trả order cũ, không tạo mới
         if (reservation.getStatus() == ReservationStatus.PAID
                 || reservation.getStatus() == ReservationStatus.COMPLETED) {
             Order existingOrder = orderRepository.findByTicketReservation(reservation)
@@ -164,6 +177,7 @@ public class ReservationService {
         return OrderResponse.from(savedOrder, ticketInfos);
     }
 
+    /** Lấy danh sách reservation của user, sắp xếp mới nhất trước, phân trang. */
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<ReservationResponseDTO> getMyReservations(User user, int page, int size) {
         var pageable = org.springframework.data.domain.PageRequest.of(page, size);
@@ -184,6 +198,7 @@ public class ReservationService {
                 });
     }
 
+    /** Hủy reservation đang PENDING: hoàn trả quantity và đánh dấu CANCELLED. */
     @Transactional(rollbackFor = Exception.class)
     public void cancelReservation(Integer reservationId, User user) {
         TicketReservation reservation = ticketReservationRepository.findByIdForUpdate(reservationId)
@@ -208,6 +223,7 @@ public class ReservationService {
         ticketReservationRepository.save(reservation);
     }
 
+    /** Hoàn trả số lượng vé về TicketType khi reservation bị hủy hoặc hết hạn. */
     private void restoreTicketQuantity(TicketReservation reservation) {
         TicketType ticketType = reservation.getTicketType();
         ticketType.setQuantity(ticketType.getQuantity() + reservation.getQuantity());
