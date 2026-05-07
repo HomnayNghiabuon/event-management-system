@@ -7,6 +7,7 @@ import com.example.event_management_server.dto.ReservationResponseDTO;
 import com.example.event_management_server.exception.BadRequestException;
 import com.example.event_management_server.exception.NotFoundException;
 import com.example.event_management_server.model.*;
+import com.example.event_management_server.model.PaymentMethod;
 import com.example.event_management_server.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class ReservationService {
     private final TicketRepository ticketRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final CommissionCalculatorService commissionCalculatorService;
 
     public ReservationService(TicketTypeRepository ticketTypeRepository,
                               TicketReservationRepository ticketReservationRepository,
@@ -35,7 +37,8 @@ public class ReservationService {
                               OrderDetailRepository orderDetailRepository,
                               TicketRepository ticketRepository,
                               NotificationService notificationService,
-                              EmailService emailService) {
+                              EmailService emailService,
+                              CommissionCalculatorService commissionCalculatorService) {
         this.ticketTypeRepository = ticketTypeRepository;
         this.ticketReservationRepository = ticketReservationRepository;
         this.orderRepository = orderRepository;
@@ -43,6 +46,7 @@ public class ReservationService {
         this.ticketRepository = ticketRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.commissionCalculatorService = commissionCalculatorService;
     }
 
     /**
@@ -159,6 +163,9 @@ public class ReservationService {
         reservation.setStatus(ReservationStatus.PAID);
         ticketReservationRepository.save(reservation);
 
+        // Snapshot hoa hồng tại thời điểm PAID
+        commissionCalculatorService.persistCommission(savedOrder);
+
         String eventTitle = reservation.getTicketType().getEvent().getTitle();
         notificationService.send(user,
                 "Đặt vé thành công",
@@ -175,6 +182,153 @@ public class ReservationService {
         emailService.sendOrderConfirmation(user, eventTitle, reservation.getQuantity(), savedOrder.getOrderId(), qrCodes);
 
         return OrderResponse.from(savedOrder, ticketInfos);
+    }
+
+    /**
+     * Tạo Order ở trạng thái AWAITING_GATEWAY cho luồng VNPay/Momo.
+     * KHÔNG sinh ticket — chờ IPN xác nhận PAID rồi mới sinh trong confirmOrderPaid().
+     * Nếu reservation đã có Order rồi (retry) → trả về Order cũ.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Order createOrderForGateway(Integer reservationId, PaymentMethod method,
+                                       List<String> attendeeNames, User user) {
+        TicketReservation reservation = ticketReservationRepository
+                .findByIdForUpdate(reservationId)
+                .orElseThrow(() -> new NotFoundException("Reservation không tồn tại"));
+
+        if (!reservation.getUser().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền tạo payment cho reservation này");
+        }
+        if (reservation.getStatus() == ReservationStatus.PAID
+                || reservation.getStatus() == ReservationStatus.COMPLETED) {
+            return orderRepository.findByTicketReservation(reservation)
+                    .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+        }
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new BadRequestException("Reservation không hợp lệ để thanh toán (status: " + reservation.getStatus() + ")");
+        }
+        if (reservation.isExpired()) {
+            handleExpiredReservation(reservation);
+            throw new BadRequestException("Reservation đã hết hạn, vé đã được hoàn trả.");
+        }
+
+        // Nếu đã có Order pending từ lần trước (user reload page) → trả về để tạo URL mới
+        var existing = orderRepository.findByTicketReservation(reservation);
+        if (existing.isPresent()) {
+            Order o = existing.get();
+            if ("AWAITING_GATEWAY".equals(o.getPaymentStatus())) return o;
+        }
+
+        BigDecimal totalPrice = reservation.getTicketType().getPrice()
+                .multiply(BigDecimal.valueOf(reservation.getQuantity()));
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setTotalPrice(totalPrice);
+        order.setPaymentStatus("AWAITING_GATEWAY");
+        order.setPaymentMethod(method.name());
+        order.setTicketReservation(reservation);
+        order.setGatewayOrderCode("EVT-" + System.currentTimeMillis() + "-"
+                + UUID.randomUUID().toString().substring(0, 8));
+        Order savedOrder = orderRepository.save(order);
+
+        // Lưu attendee names tạm vào session/DB? — đơn giản: lưu vào OrderDetail.price=null tạm
+        // Quyết định: tạm thời lưu attendee names trong memory cache không phù hợp;
+        // FE phải gửi lại khi confirm. Hiện tại chấp nhận: dùng fullName user nếu names null.
+        // (Mở rộng sau: thêm bảng order_attendees để lưu trước khi PAID.)
+        // → Lưu OrderDetail luôn để giữ ticketType + quantity + price snapshot
+        OrderDetail detail = new OrderDetail();
+        detail.setOrder(savedOrder);
+        detail.setTicketType(reservation.getTicketType());
+        detail.setQuantity(reservation.getQuantity());
+        detail.setPrice(reservation.getTicketType().getPrice());
+        orderDetailRepository.save(detail);
+
+        return savedOrder;
+    }
+
+    /**
+     * Gọi từ IPN webhook khi gateway xác nhận thanh toán thành công.
+     * Sinh Ticket + QR, set Reservation PAID, lưu commission, gửi notification + email.
+     * Idempotent: nếu Order đã PAID thì return luôn.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmOrderPaid(Order order, String providerTxnId) {
+        if ("PAID".equals(order.getPaymentStatus())) return;
+
+        order.setPaymentStatus("PAID");
+        order.setPaidAt(java.time.Instant.now());
+        if (providerTxnId != null && !providerTxnId.isBlank()) {
+            order.setTransactionId(providerTxnId);
+        }
+        orderRepository.save(order);
+
+        TicketReservation reservation = order.getTicketReservation();
+        // Sinh ticket cho từng vé
+        // Tìm OrderDetail đã tạo lúc createOrderForGateway
+        var details = ticketRepository.findByOrderId(order.getOrderId());
+        if (details.isEmpty()) {
+            // Tạo ticket mới — chuẩn flow
+            // Lấy OrderDetail từ DB (dùng OrderDetailRepository qua order id chưa có sẵn → query qua reservation)
+            int qty = reservation.getQuantity();
+            // Tìm OrderDetail vừa tạo trong createOrderForGateway: query thẳng JPQL
+            OrderDetail orderDetail = orderDetailRepository.findAll().stream()
+                    .filter(od -> od.getOrder() != null
+                            && od.getOrder().getOrderId().equals(order.getOrderId()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        OrderDetail d = new OrderDetail();
+                        d.setOrder(order);
+                        d.setTicketType(reservation.getTicketType());
+                        d.setQuantity(qty);
+                        d.setPrice(reservation.getTicketType().getPrice());
+                        return orderDetailRepository.save(d);
+                    });
+
+            for (int i = 0; i < qty; i++) {
+                Ticket ticket = new Ticket();
+                ticket.setOrderDetail(orderDetail);
+                ticket.setAttendee(order.getUser());
+                ticket.setAttendeeName(order.getUser().getFullName());
+                ticket.setQrCode(UUID.randomUUID().toString());
+                ticket.setCheckinStatus(false);
+                ticketRepository.save(ticket);
+            }
+        }
+
+        reservation.setStatus(ReservationStatus.PAID);
+        ticketReservationRepository.save(reservation);
+
+        commissionCalculatorService.persistCommission(order);
+
+        String eventTitle = reservation.getTicketType().getEvent().getTitle();
+        notificationService.send(order.getUser(),
+                "Đặt vé thành công",
+                String.format("Bạn đã đặt %d vé cho sự kiện \"%s\". Mã đơn hàng: #%d",
+                        reservation.getQuantity(), eventTitle, order.getOrderId()),
+                "ORDER_CONFIRMED");
+
+        var paidTickets = ticketRepository.findByOrderId(order.getOrderId());
+        List<String> qrCodes = paidTickets.stream().map(Ticket::getQrCode).toList();
+        emailService.sendOrderConfirmation(order.getUser(), eventTitle, reservation.getQuantity(),
+                order.getOrderId(), qrCodes);
+    }
+
+    /**
+     * Gọi từ IPN khi gateway báo thất bại — set order FAILED, hoàn vé.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void markOrderFailed(Order order) {
+        if ("PAID".equals(order.getPaymentStatus())) return; // không đụng order đã PAID
+        order.setPaymentStatus("FAILED");
+        orderRepository.save(order);
+
+        TicketReservation reservation = order.getTicketReservation();
+        if (reservation != null && reservation.getStatus() == ReservationStatus.PENDING) {
+            restoreTicketQuantity(reservation);
+            reservation.setStatus(ReservationStatus.CANCELLED);
+            ticketReservationRepository.save(reservation);
+        }
     }
 
     /** Lấy danh sách reservation của user, sắp xếp mới nhất trước, phân trang. */

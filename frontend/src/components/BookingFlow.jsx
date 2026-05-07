@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Plus, Minus, CheckCircle, XCircle, Ticket as TicketIcon, Loader2, Clock, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { reserve, purchase, cancelReservation } from '../api/reservations'
+import { createPayment } from '../api/payments'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router'
 
@@ -130,13 +131,27 @@ export function BookingFlow({ eventTitle, ticketTypes, onClose }) {
     setLoading(true)
     setError('')
     try {
-      for (const res of reservations) {
-        const names = attendeeNames[res.reservationId] || []
-        await purchase(res.reservationId, paymentMethod, names)
+      if (paymentMethod === 'CASH') {
+        for (const res of reservations) {
+          const names = attendeeNames[res.reservationId] || []
+          await purchase(res.reservationId, paymentMethod, names)
+        }
+        setStep('success')
+        return
       }
-      setStep('success')
+
+      // VNPAY / MOMO — gọi BE tạo payUrl rồi redirect.
+      // Hiện chỉ hỗ trợ 1 reservation cho gateway flow.
+      if (reservations.length > 1) {
+        setError('Tạm thời chỉ thanh toán 1 loại vé qua VNPay/Momo. Hãy chọn 1 loại hoặc dùng CASH.')
+        return
+      }
+      const res = reservations[0]
+      const names = attendeeNames[res.reservationId] || []
+      const { payUrl } = await createPayment(res.reservationId, paymentMethod, names)
+      window.location.href = payUrl
     } catch (err) {
-      setError(err.response?.data?.error || 'Thanh toán thất bại. Vui lòng thử lại.')
+      setError(err.response?.data?.error || err.response?.data?.message || 'Thanh toán thất bại. Vui lòng thử lại.')
       setStep('failed')
     } finally {
       setLoading(false)

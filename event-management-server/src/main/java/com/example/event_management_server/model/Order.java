@@ -33,6 +33,12 @@ public class Order {
     @Column(name = "transaction_id")
     private String transactionId;
 
+    @Column(name = "gateway_order_code", unique = true, length = 64)
+    private String gatewayOrderCode;
+
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id")
     private TicketReservation ticketReservation;
@@ -57,6 +63,8 @@ public class Order {
     public String getTransactionId() { return transactionId; }
     public TicketReservation getTicketReservation() { return ticketReservation; }
     public LocalDateTime getOrderDate() { return orderDate; }
+    public String getGatewayOrderCode() { return gatewayOrderCode; }
+    public Instant getPaidAt() { return paidAt; }
 
     // ===== Setter =====
     public void setOrderId(Integer orderId) { this.orderId = orderId; }
@@ -67,4 +75,6 @@ public class Order {
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
     public void setTicketReservation(TicketReservation ticketReservation) { this.ticketReservation = ticketReservation; }
     public void setOrderDate(LocalDateTime orderDate) { this.orderDate = orderDate; }
+    public void setGatewayOrderCode(String gatewayOrderCode) { this.gatewayOrderCode = gatewayOrderCode; }
+    public void setPaidAt(Instant paidAt) { this.paidAt = paidAt; }
 }

@@ -5,6 +5,7 @@ import { HomePage } from './pages/public/HomePage'
 import { EventDetailPage } from './pages/public/EventDetailPage'
 import { LoginPage } from './pages/public/LoginPage'
 import { RegisterPage } from './pages/public/RegisterPage'
+import { PaymentReturnPage } from './pages/public/PaymentReturnPage'
 
 import { MyTicketsPage } from './pages/attendee/MyTicketsPage'
 import { MyOrdersPage } from './pages/attendee/MyOrdersPage'
@@ -17,12 +18,14 @@ import { EditEventPage } from './pages/organizer/EditEventPage'
 import { EventAttendeesPage } from './pages/organizer/EventAttendeesPage'
 import { EventStatsPage } from './pages/organizer/EventStatsPage'
 import { CheckInPage } from './pages/organizer/CheckInPage'
+import { RevenuePage } from './pages/organizer/RevenuePage'
 
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminEventsPage } from './pages/admin/AdminEventsPage'
 import { AdminOrganizersPage } from './pages/admin/AdminOrganizersPage'
 import { AdminCommissionsPage } from './pages/admin/AdminCommissionsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
+import { AdminRevenuePage } from './pages/admin/AdminRevenuePage'
 
 export const router = createBrowserRouter([
   // Public
@@ -30,6 +33,7 @@ export const router = createBrowserRouter([
   { path: '/event/:id', element: <EventDetailPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
+  { path: '/payment/return', element: <PaymentReturnPage /> },
 
   // Attendee
   {
@@ -74,6 +78,10 @@ export const router = createBrowserRouter([
     path: '/organizer/checkin',
     element: <ProtectedRoute roles={['ORGANIZER']}><CheckInPage /></ProtectedRoute>,
   },
+  {
+    path: '/organizer/revenue',
+    element: <ProtectedRoute roles={['ORGANIZER']}><RevenuePage /></ProtectedRoute>,
+  },
 
   // Admin
   {
@@ -95,6 +103,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin/categories',
     element: <ProtectedRoute roles={['ADMIN']}><AdminCategoriesPage /></ProtectedRoute>,
+  },
+  {
+    path: '/admin/revenue',
+    element: <ProtectedRoute roles={['ADMIN']}><AdminRevenuePage /></ProtectedRoute>,
   },
 
   { path: '*', element: <Navigate to="/" replace /> },

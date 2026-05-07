@@ -17,6 +17,15 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     Optional<Order> findByTicketReservation(TicketReservation ticketReservation);
 
+    Optional<Order> findByGatewayOrderCode(String gatewayOrderCode);
+
+    @Query("""
+            SELECT o FROM Order o
+            WHERE o.paymentStatus = 'AWAITING_GATEWAY'
+              AND o.createdAt < :cutoff
+            """)
+    java.util.List<Order> findStaleAwaitingGateway(@Param("cutoff") java.time.Instant cutoff);
+
     Page<Order> findByUser_IdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
     @Query("""

@@ -50,6 +50,22 @@ public class OrderController {
                 .map(this::toResponse);
     }
 
+    @GetMapping("/by-code/{code}")
+    public OrderResponse getByCode(
+            @PathVariable String code,
+            @AuthenticationPrincipal User user
+    ) {
+        Order order = orderRepository.findByGatewayOrderCode(code)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order không tồn tại"));
+
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !order.getUser().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem order này");
+        }
+        return toResponse(order);
+    }
+
     @GetMapping("/{orderId}")
     public OrderResponse getOrder(
             @PathVariable Integer orderId,

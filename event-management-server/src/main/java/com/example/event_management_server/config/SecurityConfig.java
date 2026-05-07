@@ -41,6 +41,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/events", "/api/v1/events/{eventId}").permitAll() // xem sự kiện public
                 .requestMatchers(HttpMethod.GET, "/api/v1/categories").permitAll() // danh mục public
                 .requestMatchers(HttpMethod.GET, "/api/v1/tickets/*/qr-image").authenticated() // xem QR cần đăng nhập
+                .requestMatchers("/api/v1/payments/vnpay/return", "/api/v1/payments/vnpay/ipn",
+                                 "/api/v1/payments/momo/return", "/api/v1/payments/momo/ipn").permitAll() // gateway callback
                 .requestMatchers("/h2-console/**").permitAll()     // H2 console cho dev
                 .requestMatchers("/error").permitAll()             // Spring error page
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll() // Swagger UI
