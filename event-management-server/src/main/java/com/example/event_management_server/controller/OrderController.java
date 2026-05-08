@@ -1,11 +1,7 @@
 package com.example.event_management_server.controller;
 
 import com.example.event_management_server.dto.OrderResponse;
-import com.example.event_management_server.model.Order;
-import com.example.event_management_server.model.Ticket;
-import com.example.event_management_server.model.TicketReservation;
-import com.example.event_management_server.model.TicketType;
-import com.example.event_management_server.model.User;
+import com.example.event_management_server.model.*;
 import com.example.event_management_server.repository.OrderRepository;
 import com.example.event_management_server.repository.TicketRepository;
 import com.example.event_management_server.repository.TicketReservationRepository;
@@ -18,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -39,6 +38,10 @@ public class OrderController {
         this.ticketTypeRepository = ticketTypeRepository;
     }
 
+    /**
+     * Lấy danh sách đơn hàng của user đang đăng nhập, sắp xếp mới nhất trước.
+     * GET /api/v1/orders/my?page=0&size=10
+     */
     @GetMapping("/my")
     public Page<OrderResponse> getMyOrders(
             @RequestParam(defaultValue = "0") int page,
@@ -50,6 +53,11 @@ public class OrderController {
                 .map(this::toResponse);
     }
 
+    /**
+     * Lấy order theo gatewayOrderCode (dùng sau khi redirect từ VNPay/Momo).
+     * GET /api/v1/orders/by-code/{code}
+     * Chỉ chủ đơn hoặc admin mới được xem.
+     */
     @GetMapping("/by-code/{code}")
     public OrderResponse getByCode(
             @PathVariable String code,
@@ -66,6 +74,11 @@ public class OrderController {
         return toResponse(order);
     }
 
+    /**
+     * Lấy chi tiết một order theo orderId.
+     * GET /api/v1/orders/{orderId}
+     * Chỉ chủ đơn hoặc admin mới được xem.
+     */
     @GetMapping("/{orderId}")
     public OrderResponse getOrder(
             @PathVariable Integer orderId,
@@ -117,7 +130,7 @@ public class OrderController {
 
         TicketReservation reservation = order.getTicketReservation();
         if (reservation != null) {
-            reservation.setStatus(com.example.event_management_server.model.ReservationStatus.CANCELLED);
+            reservation.setStatus(ReservationStatus.CANCELLED);
             TicketType ticketType = reservation.getTicketType();
             ticketType.setQuantity(ticketType.getQuantity() + reservation.getQuantity()); // hoàn trả vé
             ticketTypeRepository.save(ticketType);
@@ -126,11 +139,65 @@ public class OrderController {
     }
 
     private OrderResponse toResponse(Order order) {
-        List<Ticket> tickets = ticketRepository.findByOrderId(order.getOrderId());
+        List<Ticket> tickets = ticketRepository.findByOrderIdWithDetails(order.getOrderId());
         List<OrderResponse.TicketInfo> infos = tickets.stream()
-                .map(t -> new OrderResponse.TicketInfo(
-                        t.getTicketId(), t.getQrCode(), t.getAttendeeName(), t.getCheckinStatus()))
+                .map(OrderResponse.TicketInfo::from)
                 .toList();
-        return OrderResponse.from(order, infos);
+
+        // Lấy event info từ ticket đầu tiên (tất cả tickets trong order thuộc cùng 1 event)
+        Integer eventId = null;
+        String eventTitle = null;
+        LocalDate eventDate = null;
+        LocalTime startTime = null;
+        String eventLocation = null;
+        String eventThumbnail = null;
+        String ticketTypeName = null;
+        BigDecimal unitPrice = null;
+        Integer quantity = null;
+
+        if (!tickets.isEmpty()) {
+            Ticket first = tickets.get(0);
+            OrderDetail od = first.getOrderDetail();
+            if (od != null) {
+                unitPrice = od.getPrice();
+                quantity = od.getQuantity();
+                TicketType tt = od.getTicketType();
+                if (tt != null) {
+                    ticketTypeName = tt.getName();
+                    Event event = tt.getEvent();
+                    if (event != null) {
+                        eventId = event.getEventId();
+                        eventTitle = event.getTitle();
+                        eventDate = event.getEventDate();
+                        startTime = event.getStartTime();
+                        eventLocation = event.getLocation();
+                        eventThumbnail = event.getThumbnail();
+                    }
+                }
+            }
+        } else {
+            // Fallback: lấy từ reservation nếu chưa có ticket
+            TicketReservation reservation = order.getTicketReservation();
+            if (reservation != null) {
+                quantity = reservation.getQuantity();
+                TicketType tt = reservation.getTicketType();
+                if (tt != null) {
+                    ticketTypeName = tt.getName();
+                    unitPrice = tt.getPrice();
+                    Event event = tt.getEvent();
+                    if (event != null) {
+                        eventId = event.getEventId();
+                        eventTitle = event.getTitle();
+                        eventDate = event.getEventDate();
+                        startTime = event.getStartTime();
+                        eventLocation = event.getLocation();
+                        eventThumbnail = event.getThumbnail();
+                    }
+                }
+            }
+        }
+
+        return OrderResponse.from(order, infos, eventId, eventTitle, eventDate, startTime,
+                eventLocation, eventThumbnail, ticketTypeName, unitPrice, quantity);
     }
 }

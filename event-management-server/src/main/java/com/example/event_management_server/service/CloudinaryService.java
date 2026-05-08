@@ -26,6 +26,7 @@ public class CloudinaryService {
         ));
     }
 
+    /** Upload ảnh lên Cloudinary CDN, trả về secure_url (HTTPS). folder dùng để tổ chức file trong dashboard Cloudinary. */
     public String uploadImage(MultipartFile file, String folder) throws IOException {
         Map<?, ?> result = cloudinary.uploader().upload(
                 file.getBytes(),
@@ -34,6 +35,7 @@ public class CloudinaryService {
         return result.get("secure_url").toString();
     }
 
+    /** Xóa ảnh khỏi Cloudinary theo publicId (phần path sau cloud_name, không bao gồm extension). */
     public void deleteImage(String publicId) throws IOException {
         cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
     }

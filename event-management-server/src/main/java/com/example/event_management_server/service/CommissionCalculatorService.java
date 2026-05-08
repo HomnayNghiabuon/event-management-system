@@ -28,6 +28,11 @@ public class CommissionCalculatorService {
         this.orderCommissionRepository = orderCommissionRepository;
     }
 
+    /**
+     * Snapshot hoa hồng tại thời điểm Order PAID và lưu vào order_commissions.
+     * Idempotent: nếu đã tồn tại record cho order này (UNIQUE constraint) thì return luôn.
+     * commission percent = active commission tại thời điểm gọi; nếu chưa có → 0%.
+     */
     @Transactional
     public void persistCommission(Order order) {
         if (orderCommissionRepository.existsByOrder_OrderId(order.getOrderId())) return;
