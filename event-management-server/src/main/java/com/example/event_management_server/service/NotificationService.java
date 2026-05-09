@@ -1,11 +1,15 @@
 package com.example.event_management_server.service;
 
 import com.example.event_management_server.model.Notification;
+import com.example.event_management_server.model.Role;
 import com.example.event_management_server.model.User;
 import com.example.event_management_server.repository.NotificationRepository;
+import com.example.event_management_server.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +20,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -34,6 +40,18 @@ public class NotificationService {
                 .isRead(false)
                 .build();
         notificationRepository.save(n);
+    }
+
+    /**
+     * Gửi thông báo đến tất cả user theo role (hoặc toàn bộ nếu targetRole = null).
+     * Được gọi từ AdminController khi admin broadcast thông báo hệ thống.
+     */
+    public int broadcastByRole(String title, String message, String type, Role targetRole) {
+        List<User> targets = targetRole != null
+                ? userRepository.findAllByRole(targetRole)
+                : userRepository.findAll();
+        targets.forEach(u -> send(u, title, message, type));
+        return targets.size();
     }
 
     /** Lấy danh sách thông báo của user, sắp xếp mới nhất trước (readOnly để tối ưu transaction). */

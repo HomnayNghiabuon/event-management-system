@@ -26,6 +26,7 @@ export function Header() {
           { to: '/admin/organizers', label: 'Organizer' },
           { to: '/admin/categories', label: 'Danh mục' },
           { to: '/admin/commissions', label: 'Commission' },
+          { to: '/admin/notifications', label: 'Thông báo' },
         ]
       : user.role === 'ORGANIZER'
       ? [
@@ -37,6 +38,7 @@ export function Header() {
           { to: '/', label: 'Trang chủ' },
           { to: '/my-tickets', label: 'Vé của tôi' },
           { to: '/my-orders', label: 'Đơn hàng' },
+          { to: '/my-schedule', label: 'Lịch sự kiện' },
         ]
     : [{ to: '/', label: 'Trang chủ' }]
 

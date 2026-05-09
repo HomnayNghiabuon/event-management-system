@@ -18,8 +18,10 @@ export function HomePage() {
   const [activeCategoryId, setActiveCategoryId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
+  const [dateQuery, setDateQuery] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   const [appliedLocation, setAppliedLocation] = useState('')
+  const [appliedDate, setAppliedDate] = useState('')
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
@@ -31,6 +33,7 @@ export function HomePage() {
     if (activeCategoryId) params.categoryId = activeCategoryId
     if (appliedSearch) params.search = appliedSearch
     if (appliedLocation) params.location = appliedLocation
+    if (appliedDate) params.date = appliedDate
     getEvents(params)
       .then((data) => {
         setEvents(data.content || [])
@@ -38,7 +41,7 @@ export function HomePage() {
       })
       .catch(() => setEvents([]))
       .finally(() => setLoading(false))
-  }, [page, activeCategoryId, appliedSearch, appliedLocation])
+  }, [page, activeCategoryId, appliedSearch, appliedLocation, appliedDate])
 
   useEffect(() => {
     fetchEvents()
@@ -47,6 +50,7 @@ export function HomePage() {
   const handleSearch = () => {
     setAppliedSearch(searchQuery)
     setAppliedLocation(locationQuery)
+    setAppliedDate(dateQuery)
     setPage(0)
   }
 
@@ -65,6 +69,8 @@ export function HomePage() {
         setSelectedLocation={setLocationQuery}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        dateQuery={dateQuery}
+        setDateQuery={setDateQuery}
         onSearch={handleSearch}
       />
       <CategoryTabs

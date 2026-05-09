@@ -7,6 +7,7 @@ import com.example.event_management_server.model.Role;
 import com.example.event_management_server.model.User;
 import com.example.event_management_server.repository.CommissionRepository;
 import com.example.event_management_server.repository.EventRepository;
+import com.example.event_management_server.repository.OrderCommissionRepository;
 import com.example.event_management_server.repository.OrderRepository;
 import com.example.event_management_server.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -29,21 +30,27 @@ public class AdminService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final OrderCommissionRepository orderCommissionRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final EmailService emailService;
     private final CommissionRepository commissionRepository;
 
     public AdminService(EventRepository eventRepository,
                         UserRepository userRepository,
                         OrderRepository orderRepository,
+                        OrderCommissionRepository orderCommissionRepository,
                         PasswordEncoder passwordEncoder,
                         NotificationService notificationService,
+                        EmailService emailService,
                         CommissionRepository commissionRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
+        this.orderCommissionRepository = orderCommissionRepository;
         this.passwordEncoder = passwordEncoder;
         this.notificationService = notificationService;
+        this.emailService = emailService;
         this.commissionRepository = commissionRepository;
     }
 
@@ -55,7 +62,8 @@ public class AdminService {
             long totalOrganizers,
             long totalAttendees,
             long totalOrders,
-            java.math.BigDecimal totalRevenue
+            java.math.BigDecimal totalRevenue,
+            java.math.BigDecimal totalCommission
     ) {}
 
     // EVENT APPROVAL
@@ -110,11 +118,13 @@ public class AdminService {
                         "Sự kiện đã được duyệt",
                         String.format("Sự kiện \"%s\" đã được Admin phê duyệt. Bạn có thể publish ngay bây giờ.", event.getTitle()),
                         "EVENT_APPROVED");
+                emailService.sendEventApproved(event.getOrganizer(), event.getTitle());
             } else {
                 notificationService.send(event.getOrganizer(),
                         "Sự kiện bị từ chối",
                         String.format("Sự kiện \"%s\" bị từ chối. Lý do: %s", event.getTitle(), request.reason()),
                         "EVENT_REJECTED");
+                emailService.sendEventRejected(event.getOrganizer(), event.getTitle(), request.reason());
             }
         }
 
@@ -221,7 +231,8 @@ public class AdminService {
                 userRepository.countByRole(Role.ORGANIZER),
                 userRepository.countByRole(Role.ATTENDEE),
                 orderRepository.count(),
-                orderRepository.sumTotalRevenue()
+                orderRepository.sumTotalRevenue(),
+                orderCommissionRepository.sumAllCommission()
         );
     }
 
@@ -251,22 +262,30 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không có commission đang active"));
     }
 
-    /** Tạo commission mới và đặt isActive=true. Commission cũ không tự động bị deactivate. */
+    @Transactional
     public Commission createCommission(java.math.BigDecimal percent, java.time.Instant effectiveFrom) {
         Commission c = new Commission();
         c.setPercent(percent);
         c.setEffectiveFrom(effectiveFrom != null ? effectiveFrom : java.time.Instant.now());
         c.setIsActive(true);
-        return commissionRepository.save(c);
+        Commission saved = commissionRepository.save(c);
+        commissionRepository.deactivateAllExcept(saved.getCommissionId());
+        return saved;
     }
 
+    @Transactional
     public Commission updateCommission(Integer commissionId, java.math.BigDecimal percent,
                                        java.time.Instant effectiveFrom, Boolean isActive) {
         Commission c = commissionRepository.findById(commissionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Commission không tồn tại: " + commissionId));
         if (percent != null) c.setPercent(percent);
         if (effectiveFrom != null) c.setEffectiveFrom(effectiveFrom);
-        if (isActive != null) c.setIsActive(isActive);
+        if (isActive != null) {
+            c.setIsActive(isActive);
+            if (Boolean.TRUE.equals(isActive)) {
+                commissionRepository.deactivateAllExcept(commissionId);
+            }
+        }
         return commissionRepository.save(c);
     }
 

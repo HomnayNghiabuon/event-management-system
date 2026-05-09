@@ -50,16 +50,19 @@ public class RevenueController {
         );
     }
 
-    /** Doanh thu hoa hồng toàn hệ thống (Admin). */
+    /** Doanh thu toàn hệ thống (Admin): gross = tổng vé bán, commission = hoa hồng nền tảng, net = đã trả organizer. */
     @GetMapping("/admin/revenue")
     @PreAuthorize("hasRole('ADMIN')")
     public RevenueSummary adminRevenue(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         Instant[] range = resolveRange(from, to);
-        BigDecimal commission = orderCommissionRepository.sumCommissionBetween(range[0], range[1]);
-        // Admin "gross" = tổng commission (vì đây là doanh thu của platform)
-        return new RevenueSummary(commission, commission, BigDecimal.ZERO, range[0], range[1]);
+        return new RevenueSummary(
+                orderCommissionRepository.sumGrossBetween(range[0], range[1]),
+                orderCommissionRepository.sumCommissionBetween(range[0], range[1]),
+                orderCommissionRepository.sumNetBetween(range[0], range[1]),
+                range[0], range[1]
+        );
     }
 
     private Instant[] resolveRange(LocalDate from, LocalDate to) {

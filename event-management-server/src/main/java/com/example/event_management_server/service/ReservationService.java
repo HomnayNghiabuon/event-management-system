@@ -174,14 +174,19 @@ public class ReservationService {
                 "ORDER_CONFIRMED");
 
         List<OrderResponse.TicketInfo> ticketInfos = tickets.stream()
-                .map(t -> new OrderResponse.TicketInfo(t.getTicketId(), t.getQrCode(), t.getAttendeeName(), t.getCheckinStatus()))
+                .map(OrderResponse.TicketInfo::from)
                 .toList();
 
         // Gửi email xác nhận bất đồng bộ (không block response)
         List<String> qrCodes = tickets.stream().map(Ticket::getQrCode).toList();
         emailService.sendOrderConfirmation(user, eventTitle, reservation.getQuantity(), savedOrder.getOrderId(), qrCodes);
 
-        return OrderResponse.from(savedOrder, ticketInfos);
+        Event ev = reservation.getTicketType().getEvent();
+        return OrderResponse.from(savedOrder, ticketInfos,
+                ev.getEventId(), ev.getTitle(), ev.getEventDate(), ev.getStartTime(),
+                ev.getLocation(), ev.getThumbnail(),
+                reservation.getTicketType().getName(), reservation.getTicketType().getPrice(),
+                reservation.getQuantity());
     }
 
     /**
@@ -251,9 +256,13 @@ public class ReservationService {
      * Gọi từ IPN webhook khi gateway xác nhận thanh toán thành công.
      * Sinh Ticket + QR, set Reservation PAID, lưu commission, gửi notification + email.
      * Idempotent: nếu Order đã PAID thì return luôn.
+     * Nhận orderCode (String) thay vì Order entity để tránh detached-entity / LazyInitializationException
+     * khi được gọi từ processIpn (self-invocation, không có Hibernate session).
      */
     @Transactional(rollbackFor = Exception.class)
-    public void confirmOrderPaid(Order order, String providerTxnId) {
+    public void confirmOrderPaid(String orderCode, String providerTxnId) {
+        Order order = orderRepository.findByGatewayOrderCode(orderCode)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại: " + orderCode));
         if ("PAID".equals(order.getPaymentStatus())) return;
 
         order.setPaymentStatus("PAID");
@@ -316,9 +325,12 @@ public class ReservationService {
 
     /**
      * Gọi từ IPN khi gateway báo thất bại — set order FAILED, hoàn vé.
+     * Nhận orderCode thay vì Order entity (tránh detached-entity issue như confirmOrderPaid).
      */
     @Transactional(rollbackFor = Exception.class)
-    public void markOrderFailed(Order order) {
+    public void markOrderFailed(String orderCode) {
+        Order order = orderRepository.findByGatewayOrderCode(orderCode)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại: " + orderCode));
         if ("PAID".equals(order.getPaymentStatus())) return; // không đụng order đã PAID
         order.setPaymentStatus("FAILED");
         orderRepository.save(order);
@@ -385,10 +397,41 @@ public class ReservationService {
     }
 
     private OrderResponse buildOrderResponse(Order order) {
-        List<Ticket> tickets = ticketRepository.findByOrderId(order.getOrderId());
+        List<Ticket> tickets = ticketRepository.findByOrderIdWithDetails(order.getOrderId());
         List<OrderResponse.TicketInfo> infos = tickets.stream()
-                .map(t -> new OrderResponse.TicketInfo(t.getTicketId(), t.getQrCode(), t.getAttendeeName(), t.getCheckinStatus()))
+                .map(OrderResponse.TicketInfo::from)
                 .toList();
-        return OrderResponse.from(order, infos);
+
+        Integer eventId = null;
+        String eventTitle = null;
+        java.time.LocalDate eventDate = null;
+        java.time.LocalTime startTime = null;
+        String eventLocation = null;
+        String eventThumbnail = null;
+        String ticketTypeName = null;
+        BigDecimal unitPrice = null;
+        Integer quantity = null;
+
+        TicketReservation reservation = order.getTicketReservation();
+        if (reservation != null) {
+            quantity = reservation.getQuantity();
+            TicketType tt = reservation.getTicketType();
+            if (tt != null) {
+                ticketTypeName = tt.getName();
+                unitPrice = tt.getPrice();
+                Event ev = tt.getEvent();
+                if (ev != null) {
+                    eventId = ev.getEventId();
+                    eventTitle = ev.getTitle();
+                    eventDate = ev.getEventDate();
+                    startTime = ev.getStartTime();
+                    eventLocation = ev.getLocation();
+                    eventThumbnail = ev.getThumbnail();
+                }
+            }
+        }
+
+        return OrderResponse.from(order, infos, eventId, eventTitle, eventDate, startTime,
+                eventLocation, eventThumbnail, ticketTypeName, unitPrice, quantity);
     }
 }

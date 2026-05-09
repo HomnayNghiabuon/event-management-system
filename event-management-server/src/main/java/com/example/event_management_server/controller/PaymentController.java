@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -69,7 +68,16 @@ public class PaymentController {
     @GetMapping("/vnpay/return")
     public ResponseEntity<PaymentCallbackResult> vnpayReturn(@RequestParam Map<String, String> params) {
         PaymentService s = gatewayResolver.resolve(PaymentMethod.VNPAY);
-        return ResponseEntity.ok(s.verifyReturn(params));
+        PaymentCallbackResult result = s.verifyReturn(params);
+        // Fallback khi IPN không tới được (localhost/test): xử lý ngay tại return URL
+        if (result.signatureValid() && result.orderCode() != null) {
+            Order order = orderRepository.findByGatewayOrderCode(result.orderCode()).orElse(null);
+            if (order != null && "AWAITING_GATEWAY".equals(order.getPaymentStatus())) {
+                if (result.success()) reservationService.confirmOrderPaid(result.orderCode(), result.providerTxnId());
+                else reservationService.markOrderFailed(result.orderCode());
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/vnpay/ipn")
@@ -98,7 +106,16 @@ public class PaymentController {
     @GetMapping("/momo/return")
     public ResponseEntity<PaymentCallbackResult> momoReturnGet(@RequestParam Map<String, String> params) {
         PaymentService s = gatewayResolver.resolve(PaymentMethod.MOMO);
-        return ResponseEntity.ok(s.verifyReturn(params));
+        PaymentCallbackResult result = s.verifyReturn(params);
+        // Fallback khi IPN không tới được (localhost/test): xử lý ngay tại return URL
+        if (result.signatureValid() && result.orderCode() != null) {
+            Order order = orderRepository.findByGatewayOrderCode(result.orderCode()).orElse(null);
+            if (order != null && "AWAITING_GATEWAY".equals(order.getPaymentStatus())) {
+                if (result.success()) reservationService.confirmOrderPaid(result.orderCode(), result.providerTxnId());
+                else reservationService.markOrderFailed(result.orderCode());
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/momo/ipn")
@@ -110,7 +127,6 @@ public class PaymentController {
         return ResponseEntity.noContent().build();
     }
 
-    @Transactional
     protected Map<String, String> processIpn(PaymentCallbackResult result,
                                              String okCode, String okMsg,
                                              String notFoundCode, String notFoundMsg,
@@ -118,7 +134,13 @@ public class PaymentController {
                                              String errorCode, String errorMsg) {
         Map<String, String> reply = new HashMap<>();
         try {
-            Order order = orderRepository.findByGatewayOrderCode(result.orderCode()).orElse(null);
+            String orderCode = result.orderCode();
+            if (orderCode == null) {
+                reply.put("RspCode", notFoundCode);
+                reply.put("Message", notFoundMsg);
+                return reply;
+            }
+            Order order = orderRepository.findByGatewayOrderCode(orderCode).orElse(null);
             if (order == null) {
                 reply.put("RspCode", notFoundCode);
                 reply.put("Message", notFoundMsg);
@@ -130,9 +152,9 @@ public class PaymentController {
                 return reply;
             }
             if (result.success()) {
-                reservationService.confirmOrderPaid(order, result.providerTxnId());
+                reservationService.confirmOrderPaid(orderCode, result.providerTxnId());
             } else {
-                reservationService.markOrderFailed(order);
+                reservationService.markOrderFailed(orderCode);
             }
             reply.put("RspCode", okCode);
             reply.put("Message", okMsg);

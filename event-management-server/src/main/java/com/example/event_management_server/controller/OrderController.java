@@ -21,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/orders")
+@Transactional(readOnly = true)
 public class OrderController {
 
     private final OrderRepository orderRepository;
@@ -105,7 +106,7 @@ public class OrderController {
      */
     @PostMapping("/{orderId}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Transactional
+    @Transactional(readOnly = false)
     public void cancelOrder(
             @PathVariable Integer orderId,
             @AuthenticationPrincipal User user) {
@@ -117,9 +118,10 @@ public class OrderController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền huỷ order này");
         }
 
-        if (!"PAID".equals(order.getPaymentStatus())) {
+        String status = order.getPaymentStatus();
+        if (!"PENDING".equals(status) && !"AWAITING_GATEWAY".equals(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Chỉ có thể huỷ order ở trạng thái PAID");
+                    "Chỉ có thể huỷ đơn hàng chưa thanh toán");
         }
 
         order.setPaymentStatus("CANCELLED");

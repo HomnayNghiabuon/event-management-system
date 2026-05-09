@@ -20,6 +20,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     @Query("""
         SELECT t FROM Ticket t
         JOIN FETCH t.orderDetail od
+        JOIN FETCH od.order o
         JOIN FETCH od.ticketType tt
         JOIN FETCH tt.event
         WHERE t.attendee.id = :attendeeId
@@ -66,6 +67,17 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
 
     @Query("SELECT t FROM Ticket t WHERE t.orderDetail.order.orderId = :orderId")
     List<Ticket> findByOrderId(@Param("orderId") Integer orderId);
+
+    /** Lấy vé kèm JOIN FETCH đầy đủ chain → dùng cho order detail / ticket detail. */
+    @Query("""
+        SELECT t FROM Ticket t
+        JOIN FETCH t.orderDetail od
+        JOIN FETCH od.ticketType tt
+        JOIN FETCH tt.event
+        WHERE od.order.orderId = :orderId
+        ORDER BY t.ticketId ASC
+        """)
+    List<Ticket> findByOrderIdWithDetails(@Param("orderId") Integer orderId);
 
     /**
      * Bulk UPDATE: đánh dấu toàn bộ vé của một order là isValid=false trong một câu query duy nhất.

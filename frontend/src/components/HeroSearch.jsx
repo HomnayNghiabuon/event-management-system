@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
-import { MapPin, Search, X, Navigation } from 'lucide-react'
+import { MapPin, Search, X, Navigation, Calendar } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -16,8 +16,8 @@ const DEFAULT_CENTER = [16.0, 106.0] // Trung tâm Việt Nam
 function formatAddress(addr, fallback = '') {
   if (!addr) return fallback
   const parts = [
+    addr.house_number ? `${addr.house_number}` : null,
     addr.road || addr.pedestrian || addr.footway,
-    addr.house_number ? `số ${addr.house_number}` : null,
     addr.neighbourhood || addr.suburb || addr.quarter,
     addr.city_district || addr.district,
     addr.city || addr.town || addr.village || addr.county,
@@ -200,7 +200,7 @@ function LocationInput({ value, onChange, onSearch }) {
   )
 }
 
-export function HeroSearch({ selectedLocation, setSelectedLocation, searchQuery, setSearchQuery, onSearch }) {
+export function HeroSearch({ selectedLocation, setSelectedLocation, searchQuery, setSearchQuery, dateQuery, setDateQuery, onSearch }) {
   const handleSearch = () => {
     if (onSearch) onSearch()
     document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' })
@@ -233,6 +233,21 @@ export function HeroSearch({ selectedLocation, setSelectedLocation, searchQuery,
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-700"
               />
             </div>
+            <div className="relative flex-1 min-w-[160px]">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+              <input
+                type="date"
+                value={dateQuery}
+                onChange={(e) => setDateQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-700"
+              />
+              {dateQuery && (
+                <button type="button" onClick={() => setDateQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
             <button
               onClick={handleSearch}
               className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 font-medium whitespace-nowrap"
@@ -254,6 +269,20 @@ export function HeroSearch({ selectedLocation, setSelectedLocation, searchQuery,
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-700"
               />
+            </div>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+              <input
+                type="date"
+                value={dateQuery}
+                onChange={(e) => setDateQuery(e.target.value)}
+                className="w-full pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-700"
+              />
+              {dateQuery && (
+                <button type="button" onClick={() => setDateQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
             <button
               onClick={handleSearch}

@@ -51,4 +51,21 @@ public interface OrderCommissionRepository extends JpaRepository<OrderCommission
             WHERE oc.createdAt BETWEEN :from AND :to
             """)
     BigDecimal sumCommissionBetween(@Param("from") Instant from, @Param("to") Instant to);
+
+    @Query("SELECT COALESCE(SUM(oc.commissionAmount), 0) FROM OrderCommission oc")
+    BigDecimal sumAllCommission();
+
+    @Query("""
+            SELECT COALESCE(SUM(oc.grossAmount), 0)
+            FROM OrderCommission oc
+            WHERE oc.createdAt BETWEEN :from AND :to
+            """)
+    BigDecimal sumGrossBetween(@Param("from") Instant from, @Param("to") Instant to);
+
+    @Query("""
+            SELECT COALESCE(SUM(oc.netAmount), 0)
+            FROM OrderCommission oc
+            WHERE oc.createdAt BETWEEN :from AND :to
+            """)
+    BigDecimal sumNetBetween(@Param("from") Instant from, @Param("to") Instant to);
 }

@@ -32,10 +32,12 @@ export function AdminCommissionsPage() {
     setError('')
     setSaving(true)
     try {
-      const payload = { percent: parseFloat(form.percent), isActive: form.isActive }
+      const payload = { percent: parseFloat(form.percent) }
       if (form.effectiveFrom) payload.effectiveFrom = form.effectiveFrom + 'T00:00:00Z'
-      if (editId) await updateCommission(editId, payload)
-      else await createCommission(payload)
+      if (editId) {
+        payload.isActive = form.isActive
+        await updateCommission(editId, payload)
+      } else await createCommission(payload)
       setModal(false)
       load()
     } catch (err) {
@@ -121,13 +123,17 @@ export function AdminCommissionsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none" />
                 <p className="text-xs text-gray-400 mt-1">Để trống = áp dụng ngay</p>
               </div>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <div className={`relative w-12 h-6 rounded-full transition-colors ${form.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-                  onClick={() => setForm({ ...form, isActive: !form.isActive })}>
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.isActive ? 'left-6' : 'left-0.5'}`} />
-                </div>
-                <span className="text-sm font-medium text-gray-700">Đang áp dụng</span>
-              </label>
+              {editId ? (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className={`relative w-12 h-6 rounded-full transition-colors ${form.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                    onClick={() => setForm({ ...form, isActive: !form.isActive })}>
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.isActive ? 'left-6' : 'left-0.5'}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">Đang áp dụng</span>
+                </label>
+              ) : (
+                <p className="text-xs text-green-600 font-medium">Commission mới sẽ tự động được áp dụng và thay thế commission hiện tại.</p>
+              )}
               {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-red-600 text-sm">{error}</p></div>}
               <div className="flex gap-3">
                 <button type="button" onClick={() => setModal(false)}

@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, Loader2, Clock } from 'lucide-react'
 import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { getOrderByCode } from '../../api/payments'
+import client from '../../api/client'
 
 const POLL_INTERVAL_MS = 2000
 const MAX_POLLS = 10
@@ -27,6 +28,15 @@ export function PaymentReturnPage() {
 
     let attempts = 0
     let cancelled = false
+
+    // Gọi backend return endpoint để xác nhận payment (fallback khi IPN không tới được localhost)
+    const triggerReturnVerify = async () => {
+      try {
+        const providerPath = provider === 'VNPAY' ? 'vnpay' : 'momo'
+        const allParams = Object.fromEntries(params.entries())
+        await client.get(`/payments/${providerPath}/return`, { params: allParams })
+      } catch { /* bỏ qua lỗi — IPN có thể đã xử lý rồi */ }
+    }
 
     const poll = async () => {
       if (cancelled) return
@@ -57,7 +67,7 @@ export function PaymentReturnPage() {
       }
     }
 
-    poll()
+    triggerReturnVerify().then(poll)
     return () => { cancelled = true }
   }, [orderCode, responseCode])
 

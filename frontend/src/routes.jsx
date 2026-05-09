@@ -8,7 +8,10 @@ import { RegisterPage } from './pages/public/RegisterPage'
 import { PaymentReturnPage } from './pages/public/PaymentReturnPage'
 
 import { MyTicketsPage } from './pages/attendee/MyTicketsPage'
+import { TicketDetailPage } from './pages/attendee/TicketDetailPage'
 import { MyOrdersPage } from './pages/attendee/MyOrdersPage'
+import { OrderDetailPage } from './pages/attendee/OrderDetailPage'
+import { MySchedulePage } from './pages/attendee/MySchedulePage'
 import { NotificationsPage } from './pages/attendee/NotificationsPage'
 import { ProfilePage } from './pages/attendee/ProfilePage'
 
@@ -26,6 +29,7 @@ import { AdminOrganizersPage } from './pages/admin/AdminOrganizersPage'
 import { AdminCommissionsPage } from './pages/admin/AdminCommissionsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminRevenuePage } from './pages/admin/AdminRevenuePage'
+import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage'
 
 export const router = createBrowserRouter([
   // Public
@@ -41,8 +45,20 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute roles={['ATTENDEE']}><MyTicketsPage /></ProtectedRoute>,
   },
   {
+    path: '/my-tickets/:ticketId',
+    element: <ProtectedRoute roles={['ATTENDEE']}><TicketDetailPage /></ProtectedRoute>,
+  },
+  {
     path: '/my-orders',
     element: <ProtectedRoute roles={['ATTENDEE']}><MyOrdersPage /></ProtectedRoute>,
+  },
+  {
+    path: '/my-orders/:orderId',
+    element: <ProtectedRoute roles={['ATTENDEE']}><OrderDetailPage /></ProtectedRoute>,
+  },
+  {
+    path: '/my-schedule',
+    element: <ProtectedRoute roles={['ATTENDEE']}><MySchedulePage /></ProtectedRoute>,
   },
   {
     path: '/notifications',
@@ -107,6 +123,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin/revenue',
     element: <ProtectedRoute roles={['ADMIN']}><AdminRevenuePage /></ProtectedRoute>,
+  },
+  {
+    path: '/admin/notifications',
+    element: <ProtectedRoute roles={['ADMIN']}><AdminNotificationsPage /></ProtectedRoute>,
   },
 
   { path: '*', element: <Navigate to="/" replace /> },

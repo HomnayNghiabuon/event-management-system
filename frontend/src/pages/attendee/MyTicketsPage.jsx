@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router'
 import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
 import { getMyTickets, fetchQrImage } from '../../api/tickets'
-import { QrCode, CheckCircle, XCircle, Ticket, Loader2, Download } from 'lucide-react'
+import { QrCode, CheckCircle, XCircle, Ticket, Loader2, Download, ChevronRight } from 'lucide-react'
 
 export function MyTicketsPage() {
   const [tickets, setTickets] = useState([])
@@ -257,12 +258,18 @@ function TicketCard({ ticket, onShowQr }) {
           </p>
         )}
 
-        {onShowQr && (
-          <button onClick={onShowQr}
-            className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
-            <QrCode className="w-4 h-4" /> Xem QR Code
-          </button>
-        )}
+        <div className="flex gap-2 mt-1">
+          {onShowQr && (
+            <button onClick={onShowQr}
+              className="flex-1 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
+              <QrCode className="w-4 h-4" /> Xem QR
+            </button>
+          )}
+          <Link to={`/my-tickets/${ticket.ticketId}`}
+            className="flex-1 py-2.5 border border-purple-300 text-purple-600 rounded-lg text-sm font-medium hover:bg-purple-50 transition-all flex items-center justify-center gap-1">
+            Chi tiết <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   )

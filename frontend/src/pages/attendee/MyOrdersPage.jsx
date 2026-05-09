@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router'
 import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
 import { getMyOrders, cancelOrder } from '../../api/orders'
-import { ShoppingBag, Ticket, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { ShoppingBag, Ticket, ChevronDown, ChevronUp, Loader2, ChevronRight } from 'lucide-react'
 
 const VND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
@@ -76,7 +77,16 @@ export function MyOrdersPage() {
                         <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                           {VND.format(order.totalPrice)}
                         </p>
-                        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400 ml-auto mt-1" /> : <ChevronDown className="w-5 h-5 text-gray-400 ml-auto mt-1" />}
+                        <div className="flex items-center gap-2 mt-1 justify-end">
+                          <Link
+                            to={`/my-orders/${order.orderId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-purple-600 hover:text-purple-700 font-medium hover:underline flex items-center gap-0.5"
+                          >
+                            Chi tiết <ChevronRight className="w-3 h-3" />
+                          </Link>
+                          {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -98,7 +108,7 @@ export function MyOrdersPage() {
                           </div>
                         ))}
                       </div>
-                      {order.paymentStatus === 'PAID' && (
+                      {(order.paymentStatus === 'PENDING' || order.paymentStatus === 'AWAITING_GATEWAY') && (
                         <button
                           onClick={() => handleCancel(order.orderId)}
                           disabled={cancelling === order.orderId}

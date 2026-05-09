@@ -89,6 +89,46 @@ public class EmailService {
         }
     }
 
+    // ── Event approval / rejection ────────────────────────────────
+
+    @Async
+    public void sendEventApproved(User organizer, String eventTitle) {
+        boolean mailConfigured = mailSender != null && mailFrom != null && !mailFrom.isBlank();
+        if (!mailConfigured) return;
+        try {
+            String subject = "[BuyTicket] Sự kiện của bạn đã được duyệt";
+            sendHtml(organizer.getEmail(), subject, buildEventApprovedHtml(organizer, eventTitle));
+        } catch (Exception e) {
+            log.error("Failed to send event-approved email to {}: {}", organizer.getEmail(), e.getMessage(), e);
+        }
+    }
+
+    @Async
+    public void sendEventRejected(User organizer, String eventTitle, String reason) {
+        boolean mailConfigured = mailSender != null && mailFrom != null && !mailFrom.isBlank();
+        if (!mailConfigured) return;
+        try {
+            String subject = "[BuyTicket] Sự kiện của bạn bị từ chối";
+            sendHtml(organizer.getEmail(), subject, buildEventRejectedHtml(organizer, eventTitle, reason));
+        } catch (Exception e) {
+            log.error("Failed to send event-rejected email to {}: {}", organizer.getEmail(), e.getMessage(), e);
+        }
+    }
+
+    // ── Event reminder ────────────────────────────────────────────
+
+    @Async
+    public void sendEventReminder(User attendee, String eventTitle, String timeStr, String location) {
+        boolean mailConfigured = mailSender != null && mailFrom != null && !mailFrom.isBlank();
+        if (!mailConfigured) return;
+        try {
+            String subject = "[BuyTicket] Nhắc nhở: \"" + eventTitle + "\" sắp bắt đầu!";
+            sendHtml(attendee.getEmail(), subject, buildReminderHtml(attendee, eventTitle, timeStr, location));
+        } catch (Exception e) {
+            log.error("Failed to send reminder email to {}: {}", attendee.getEmail(), e.getMessage(), e);
+        }
+    }
+
     // ── Internal helpers ──────────────────────────────────────────
 
     private void sendHtml(String to, String subject, String html) throws Exception {
@@ -145,6 +185,101 @@ public class EmailService {
               </table>
             </body></html>
             """.formatted(name, eventTitle, subject, body);
+    }
+
+    private String buildEventApprovedHtml(User organizer, String eventTitle) {
+        String name = organizer.getFullName() != null ? organizer.getFullName() : organizer.getEmail();
+        return """
+            <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"></head>
+            <body style="margin:0;padding:0;background:#F5F7FA;font-family:Arial,sans-serif;">
+              <table width="100%%" cellpadding="0" cellspacing="0" style="background:#F5F7FA;padding:32px 0;">
+                <tr><td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <tr><td style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:28px 32px;">
+                      <h1 style="margin:0;color:#ffffff;font-size:22px;">🎫 BuyTicket</h1>
+                    </td></tr>
+                    <tr><td style="padding:32px;">
+                      <div style="text-align:center;margin-bottom:24px;">
+                        <span style="font-size:48px;">✅</span>
+                        <h2 style="margin:8px 0 4px;color:#059669;font-size:20px;">Sự kiện đã được duyệt!</h2>
+                      </div>
+                      <p style="color:#374151;font-size:15px;">Xin chào <strong>%s</strong>,</p>
+                      <p style="color:#374151;font-size:14px;">Sự kiện <strong>"%s"</strong> của bạn đã được Admin phê duyệt. Bạn có thể publish sự kiện ngay bây giờ.</p>
+                    </td></tr>
+                    <tr><td style="background:#F9FAFB;padding:20px 32px;border-top:1px solid #E5E7EB;">
+                      <p style="margin:0;color:#9CA3AF;font-size:12px;text-align:center;">Email tự động từ BuyTicket. Vui lòng không trả lời.</p>
+                    </td></tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body></html>
+            """.formatted(name, eventTitle);
+    }
+
+    private String buildEventRejectedHtml(User organizer, String eventTitle, String reason) {
+        String name = organizer.getFullName() != null ? organizer.getFullName() : organizer.getEmail();
+        return """
+            <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"></head>
+            <body style="margin:0;padding:0;background:#F5F7FA;font-family:Arial,sans-serif;">
+              <table width="100%%" cellpadding="0" cellspacing="0" style="background:#F5F7FA;padding:32px 0;">
+                <tr><td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <tr><td style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:28px 32px;">
+                      <h1 style="margin:0;color:#ffffff;font-size:22px;">🎫 BuyTicket</h1>
+                    </td></tr>
+                    <tr><td style="padding:32px;">
+                      <div style="text-align:center;margin-bottom:24px;">
+                        <span style="font-size:48px;">❌</span>
+                        <h2 style="margin:8px 0 4px;color:#DC2626;font-size:20px;">Sự kiện bị từ chối</h2>
+                      </div>
+                      <p style="color:#374151;font-size:15px;">Xin chào <strong>%s</strong>,</p>
+                      <p style="color:#374151;font-size:14px;">Rất tiếc, sự kiện <strong>"%s"</strong> của bạn đã bị từ chối.</p>
+                      <div style="background:#FEF2F2;border-left:4px solid #DC2626;border-radius:4px;padding:16px 20px;margin:16px 0;">
+                        <p style="margin:0;color:#374151;font-size:14px;"><strong>Lý do:</strong> %s</p>
+                      </div>
+                      <p style="color:#6B7280;font-size:13px;">Bạn có thể chỉnh sửa và gửi lại sự kiện để được xét duyệt.</p>
+                    </td></tr>
+                    <tr><td style="background:#F9FAFB;padding:20px 32px;border-top:1px solid #E5E7EB;">
+                      <p style="margin:0;color:#9CA3AF;font-size:12px;text-align:center;">Email tự động từ BuyTicket. Vui lòng không trả lời.</p>
+                    </td></tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body></html>
+            """.formatted(name, eventTitle, reason != null ? reason : "Không có lý do cụ thể");
+    }
+
+    private String buildReminderHtml(User attendee, String eventTitle, String timeStr, String location) {
+        String name = attendee.getFullName() != null ? attendee.getFullName() : attendee.getEmail();
+        String locationHtml = location != null
+                ? "<p style=\"color:#374151;font-size:14px;\">📍 <strong>Địa điểm:</strong> " + location + "</p>"
+                : "";
+        return """
+            <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"></head>
+            <body style="margin:0;padding:0;background:#F5F7FA;font-family:Arial,sans-serif;">
+              <table width="100%%" cellpadding="0" cellspacing="0" style="background:#F5F7FA;padding:32px 0;">
+                <tr><td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                    <tr><td style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:28px 32px;">
+                      <h1 style="margin:0;color:#ffffff;font-size:22px;">🎫 BuyTicket</h1>
+                    </td></tr>
+                    <tr><td style="padding:32px;">
+                      <div style="text-align:center;margin-bottom:24px;">
+                        <span style="font-size:48px;">⏰</span>
+                        <h2 style="margin:8px 0 4px;color:#D97706;font-size:20px;">Sự kiện sắp bắt đầu!</h2>
+                      </div>
+                      <p style="color:#374151;font-size:15px;">Xin chào <strong>%s</strong>,</p>
+                      <p style="color:#374151;font-size:14px;">Sự kiện <strong>"%s"</strong> sẽ bắt đầu lúc <strong>%s</strong> hôm nay. Đừng quên chuẩn bị vé để check-in!</p>
+                      %s
+                    </td></tr>
+                    <tr><td style="background:#F9FAFB;padding:20px 32px;border-top:1px solid #E5E7EB;">
+                      <p style="margin:0;color:#9CA3AF;font-size:12px;text-align:center;">Email tự động từ BuyTicket. Vui lòng không trả lời.</p>
+                    </td></tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body></html>
+            """.formatted(name, eventTitle, timeStr, locationHtml);
     }
 
     private String buildOrderConfirmationHtml(User user, String eventTitle, int quantity, long orderId, List<String> qrCodes) {

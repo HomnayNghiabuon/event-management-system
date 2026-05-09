@@ -43,3 +43,7 @@ export const createCommission = (data) =>
 
 export const updateCommission = (id, data) =>
   client.patch(`/admin/commissions/${id}`, data).then((r) => r.data)
+
+// Notifications
+export const broadcastNotification = (title, message, targetRole) =>
+  client.post('/admin/notifications/broadcast', { title, message, targetRole }).then((r) => r.data)

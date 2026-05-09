@@ -52,11 +52,12 @@ export function AdminDashboardPage() {
               <StatCard icon={CheckCircle} label="Đã duyệt" value={stats.approvedEvents} color="bg-gradient-to-br from-green-500 to-emerald-600" />
               <StatCard icon={XCircle} label="Bị từ chối" value={stats.rejectedEvents} color="bg-gradient-to-br from-red-500 to-rose-600" />
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <StatCard icon={Building} label="Organizers" value={stats.totalOrganizers} color="bg-gradient-to-br from-purple-500 to-pink-600" link="/admin/organizers" />
               <StatCard icon={Users} label="Người tham dự" value={stats.totalAttendees?.toLocaleString('vi-VN') || 0} color="bg-gradient-to-br from-cyan-500 to-blue-600" />
               <StatCard icon={ShoppingCart} label="Tổng đơn hàng" value={stats.totalOrders?.toLocaleString('vi-VN') || 0} color="bg-gradient-to-br from-orange-500 to-red-500" />
               <StatCard icon={TrendingUp} label="Tổng doanh thu" value={VND.format(stats.totalRevenue || 0)} color="bg-gradient-to-br from-green-600 to-teal-600" />
+              <StatCard icon={TrendingUp} label="Tổng hoa hồng" value={VND.format(stats.totalCommission || 0)} color="bg-gradient-to-br from-amber-500 to-orange-600" link="/admin/revenue" />
             </div>
 
             {/* Quick actions */}

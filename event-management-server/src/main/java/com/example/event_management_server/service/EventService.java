@@ -63,9 +63,27 @@ public class EventService {
         };
 
         String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        String[] loc = parseLocationTokens(location);
         Pageable pageable = PageRequest.of(page, size, sortBy);
-        return eventRepository.findPublished(categoryId, location, date, kw, pageable)
+        return eventRepository.findPublished(categoryId, loc[0], loc[1], loc[2], date, kw, pageable)
                 .map(EventSummaryResponse::from);
+    }
+
+    /**
+     * Tách chuỗi location thành tối đa 3 token theo dấu phẩy, dùng AND LIKE trong query.
+     * Trả về [null, null, null] khi không có bộ lọc địa điểm.
+     * Ví dụ: "8 Nguyễn Bỉnh Khiêm, Đa Kao, Quận 1" → ["8 Nguyễn Bỉnh Khiêm", "Đa Kao", "Quận 1"]
+     * → event.location phải chứa cả 3 → kết quả chính xác, không trả về toàn bộ Quận 1.
+     */
+    private String[] parseLocationTokens(String location) {
+        if (location == null || location.isBlank()) return new String[]{null, null, null};
+        String[] parts = location.trim().split("\\s*,\\s*");
+        String[] result = new String[3];
+        for (int i = 0; i < 3; i++) {
+            String part = i < parts.length ? parts[i].trim() : null;
+            result[i] = (part != null && !part.isBlank()) ? part : null;
+        }
+        return result;
     }
 
     /**

@@ -63,6 +63,7 @@ export function CreateEventPage() {
     e.preventDefault()
     setError('')
     if (form.ticketTypes.length === 0) { setError('Phải có ít nhất 1 loại vé'); return }
+    if (!form.latitude || !form.longitude) { setError('Vui lòng chọn địa điểm chính xác từ gợi ý tìm kiếm hoặc click vào bản đồ'); return }
     setLoading(true)
     try {
       const payload = {

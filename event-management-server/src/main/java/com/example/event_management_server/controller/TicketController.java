@@ -2,7 +2,9 @@ package com.example.event_management_server.controller;
 
 import com.example.event_management_server.model.Event;
 import com.example.event_management_server.model.Order;
+import com.example.event_management_server.model.OrderDetail;
 import com.example.event_management_server.model.Ticket;
+import com.example.event_management_server.model.TicketType;
 import com.example.event_management_server.model.User;
 import com.example.event_management_server.repository.EventRepository;
 import com.example.event_management_server.repository.OrderRepository;
@@ -17,7 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @RestController
@@ -49,6 +56,32 @@ public class TicketController {
         return ticketRepository.findByAttendee_Id(user.getId()).stream()
                 .map(MyTicketInfo::from)
                 .toList();
+    }
+
+    /**
+     * Xem chi tiết một vé theo ticketId.
+     * GET /api/v1/tickets/{ticketId}
+     * Chỉ chủ sở hữu vé, organizer sự kiện, hoặc admin mới được xem.
+     */
+    @GetMapping("/tickets/{ticketId}")
+    public MyTicketInfo getTicketDetail(
+            @PathVariable Integer ticketId,
+            @AuthenticationPrincipal User user
+    ) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vé không tồn tại"));
+
+        boolean isAdmin = isAdmin(user);
+        boolean isOwner = ticket.getAttendee() != null && ticket.getAttendee().getId().equals(user.getId());
+        if (!isAdmin && !isOwner) {
+            Event event = ticket.getOrderDetail().getTicketType().getEvent();
+            boolean isOrganizer = event.getOrganizer() != null && event.getOrganizer().getId().equals(user.getId());
+            if (!isOrganizer) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem vé này");
+            }
+        }
+
+        return MyTicketInfo.from(ticket);
     }
 
     /**
@@ -111,11 +144,21 @@ public class TicketController {
             return new CheckinResponse(false, "Vé đã được check-in trước đó", ticket.getCheckinTime(), ticket.getAttendeeName());
         }
 
+        // Kiểm tra sự kiện còn trong thời gian check-in (chưa kết thúc)
+        Event eventForTime = ticket.getOrderDetail().getTicketType().getEvent();
+        if (eventForTime.getEventDate() != null) {
+            LocalTime cutoff = eventForTime.getEndTime() != null ? eventForTime.getEndTime() : LocalTime.MAX;
+            LocalDateTime eventEnd = LocalDateTime.of(eventForTime.getEventDate(), cutoff);
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            if (now.isAfter(eventEnd)) {
+                return new CheckinResponse(false, "Sự kiện đã kết thúc, không thể check-in", null, ticket.getAttendeeName());
+            }
+        }
+
         boolean isAdmin = isAdmin(user);
         if (!isAdmin) {
             // Organizer chỉ được check-in vé của sự kiện mình tổ chức
-            Event event = ticket.getOrderDetail().getTicketType().getEvent();
-            if (event.getOrganizer() == null || !event.getOrganizer().getId().equals(user.getId())) {
+            if (eventForTime.getOrganizer() == null || !eventForTime.getOrganizer().getId().equals(user.getId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền check-in cho sự kiện này");
             }
         }
@@ -166,19 +209,58 @@ public class TicketController {
             Boolean checkinStatus,
             Instant checkinTime,
             Boolean isValid,
+            Integer eventId,
             String eventTitle,
+            LocalDate eventDate,
+            LocalTime startTime,
+            LocalTime endTime,
+            String eventLocation,
+            String eventThumbnail,
+            Double latitude,
+            Double longitude,
             String ticketTypeName,
+            BigDecimal unitPrice,
+            Integer orderId,
             String qrImageUrl
     ) {
         static MyTicketInfo from(Ticket t) {
+            Integer eventId = null;
             String eventTitle = null;
+            LocalDate eventDate = null;
+            LocalTime startTime = null;
+            LocalTime endTime = null;
+            String eventLocation = null;
+            String eventThumbnail = null;
+            Double latitude = null;
+            Double longitude = null;
             String ticketTypeName = null;
-            if (t.getOrderDetail() != null && t.getOrderDetail().getTicketType() != null) {
-                ticketTypeName = t.getOrderDetail().getTicketType().getName();
-                if (t.getOrderDetail().getTicketType().getEvent() != null) {
-                    eventTitle = t.getOrderDetail().getTicketType().getEvent().getTitle();
+            BigDecimal unitPrice = null;
+            Integer orderId = null;
+
+            OrderDetail od = t.getOrderDetail();
+            if (od != null) {
+                unitPrice = od.getPrice();
+                if (od.getOrder() != null) {
+                    orderId = od.getOrder().getOrderId();
+                }
+                TicketType tt = od.getTicketType();
+                if (tt != null) {
+                    ticketTypeName = tt.getName();
+                    Event event = tt.getEvent();
+                    if (event != null) {
+                        eventId = event.getEventId();
+                        eventTitle = event.getTitle();
+                        eventDate = event.getEventDate();
+                        startTime = event.getStartTime();
+                        endTime = event.getEndTime();
+                        eventLocation = event.getLocation();
+                        eventThumbnail = event.getThumbnail();
+                        latitude = event.getLatitude();
+                        longitude = event.getLongitude();
+                    }
                 }
             }
+
             return new MyTicketInfo(
                     t.getTicketId(),
                     t.getQrCode(),
@@ -186,8 +268,18 @@ public class TicketController {
                     t.getCheckinStatus(),
                     t.getCheckinTime(),
                     t.getIsValid(),
+                    eventId,
                     eventTitle,
+                    eventDate,
+                    startTime,
+                    endTime,
+                    eventLocation,
+                    eventThumbnail,
+                    latitude,
+                    longitude,
                     ticketTypeName,
+                    unitPrice,
+                    orderId,
                     "/api/v1/tickets/" + t.getQrCode() + "/qr-image"
             );
         }

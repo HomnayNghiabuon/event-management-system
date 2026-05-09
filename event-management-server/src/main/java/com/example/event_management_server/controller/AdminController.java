@@ -2,18 +2,20 @@ package com.example.event_management_server.controller;
 
 import com.example.event_management_server.dto.*;
 import com.example.event_management_server.model.Commission;
+import com.example.event_management_server.model.Role;
 import com.example.event_management_server.model.User;
 import com.example.event_management_server.service.AdminService;
+import com.example.event_management_server.service.NotificationService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -29,9 +31,11 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final NotificationService notificationService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, NotificationService notificationService) {
         this.adminService = adminService;
+        this.notificationService = notificationService;
     }
 
     // EVENT APPROVAL
@@ -172,4 +176,24 @@ public class AdminController {
             @RequestBody CommissionRequest request) {
         return adminService.updateCommission(commissionId, request.percent(), request.effectiveFrom(), request.isActive());
     }
+
+    // NOTIFICATIONS
+
+    /**
+     * Gửi thông báo broadcast đến toàn bộ user hoặc theo role.
+     * POST /api/v1/admin/notifications/broadcast
+     * Body: { "title": "...", "message": "...", "targetRole": "ALL" | "ATTENDEE" | "ORGANIZER" }
+     */
+    @PostMapping("/notifications/broadcast")
+    public Map<String, Object> broadcastNotification(@Valid @RequestBody BroadcastRequest request) {
+        Role targetRole = "ALL".equals(request.targetRole()) ? null : Role.valueOf(request.targetRole());
+        int count = notificationService.broadcastByRole(request.title(), request.message(), "SYSTEM_BROADCAST", targetRole);
+        return Map.of("sent", count);
+    }
+
+    record BroadcastRequest(
+            @NotBlank String title,
+            @NotBlank String message,
+            String targetRole   // "ALL" | "ATTENDEE" | "ORGANIZER"
+    ) {}
 }

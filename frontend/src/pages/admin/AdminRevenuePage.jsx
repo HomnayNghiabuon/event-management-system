@@ -3,7 +3,7 @@ import { Header } from '../../components/Header'
 import { Footer } from '../../components/Footer'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
 import { getAdminRevenue } from '../../api/revenue'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, DollarSign, ArrowDownRight } from 'lucide-react'
 
 const VND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
@@ -33,12 +33,10 @@ export function AdminRevenuePage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F7FA]">
       <Header />
-      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Doanh thu nền tảng</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Tổng hoa hồng thu được từ các đơn hàng đã thanh toán.
-          </p>
+          <p className="text-gray-500 text-sm mt-1">Thống kê doanh thu toàn hệ thống từ các đơn hàng đã thanh toán.</p>
         </div>
 
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap items-end gap-4">
@@ -53,12 +51,10 @@ export function AdminRevenuePage() {
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none" />
           </div>
           <div className="flex gap-2">
-            <button onClick={() => { setFrom(daysAgo(7)); setTo(today()) }}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">7 ngày</button>
-            <button onClick={() => { setFrom(daysAgo(30)); setTo(today()) }}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">30 ngày</button>
-            <button onClick={() => { setFrom(daysAgo(90)); setTo(today()) }}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">90 ngày</button>
+            {[7, 30, 90].map((n) => (
+              <button key={n} onClick={() => { setFrom(daysAgo(n)); setTo(today()) }}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">{n} ngày</button>
+            ))}
           </div>
         </div>
 
@@ -66,18 +62,46 @@ export function AdminRevenuePage() {
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">{error}</div>}
 
         {!loading && !error && data && (
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center">
-            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-blue-600" />
+                </div>
+                <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
+              </div>
+              <p className="text-2xl font-bold text-blue-700">{VND.format(Number(data.grossAmount || 0))}</p>
+              <p className="text-xs text-gray-400 mt-1">Tổng tiền vé bán được</p>
             </div>
-            <p className="text-sm text-gray-500 mb-2">Tổng hoa hồng thu được</p>
-            <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {VND.format(Number(data.commissionAmount || 0))}
-            </p>
-            <p className="mt-4 text-xs text-gray-400">
-              Khoảng: {data.from?.slice(0, 10)} → {data.to?.slice(0, 10)}
-            </p>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-orange-600" />
+                </div>
+                <p className="text-sm font-medium text-gray-600">Hoa hồng nền tảng</p>
+              </div>
+              <p className="text-2xl font-bold text-orange-600">{VND.format(Number(data.commissionAmount || 0))}</p>
+              <p className="text-xs text-gray-400 mt-1">Phí thu từ các Organizer</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <ArrowDownRight className="w-5 h-5 text-gray-500" />
+                </div>
+                <p className="text-sm font-medium text-gray-600">Đã trả Organizer</p>
+              </div>
+              <p className="text-2xl font-bold text-gray-700">{VND.format(Number(data.netAmount || 0))}</p>
+              <p className="text-xs text-gray-400 mt-1">Tổng tiền net về tay organizer</p>
+            </div>
           </div>
+        )}
+
+        {!loading && !error && data && (
+          <p className="text-xs text-gray-400 mt-4 text-center">
+            Khoảng: {data.from?.slice(0, 10)} → {data.to?.slice(0, 10)}
+          </p>
         )}
       </main>
       <Footer />
