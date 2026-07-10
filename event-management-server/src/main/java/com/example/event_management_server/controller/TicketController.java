@@ -1,0 +1,311 @@
+package com.example.event_management_server.controller;
+
+import com.example.event_management_server.model.Event;
+import com.example.event_management_server.model.Order;
+import com.example.event_management_server.model.OrderDetail;
+import com.example.event_management_server.model.Ticket;
+import com.example.event_management_server.model.TicketType;
+import com.example.event_management_server.model.User;
+import com.example.event_management_server.repository.EventRepository;
+import com.example.event_management_server.repository.OrderRepository;
+import com.example.event_management_server.repository.TicketRepository;
+import com.example.event_management_server.service.QrCodeService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1")
+@Transactional
+public class TicketController {
+
+    private final TicketRepository ticketRepository;
+    private final EventRepository eventRepository;
+    private final OrderRepository orderRepository;
+    private final QrCodeService qrCodeService;
+
+    public TicketController(TicketRepository ticketRepository,
+                            EventRepository eventRepository,
+                            OrderRepository orderRepository,
+                            QrCodeService qrCodeService) {
+        this.ticketRepository = ticketRepository;
+        this.eventRepository = eventRepository;
+        this.orderRepository = orderRepository;
+        this.qrCodeService = qrCodeService;
+    }
+
+    /**
+     * Attendee xem danh sách vé của mình (kèm QR code string).
+     * GET /api/v1/tickets/my
+     */
+    @GetMapping("/tickets/my")
+    public List<MyTicketInfo> getMyTickets(@AuthenticationPrincipal User user) {
+        return ticketRepository.findByAttendee_Id(user.getId()).stream()
+                .map(MyTicketInfo::from)
+                .toList();
+    }
+
+    /**
+     * Xem chi tiết một vé theo ticketId.
+     * GET /api/v1/tickets/{ticketId}
+     * Chỉ chủ sở hữu vé, organizer sự kiện, hoặc admin mới được xem.
+     */
+    @GetMapping("/tickets/{ticketId}")
+    public MyTicketInfo getTicketDetail(
+            @PathVariable Integer ticketId,
+            @AuthenticationPrincipal User user
+    ) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vé không tồn tại"));
+
+        boolean isAdmin = isAdmin(user);
+        boolean isOwner = ticket.getAttendee() != null && ticket.getAttendee().getId().equals(user.getId());
+        if (!isAdmin && !isOwner) {
+            Event event = ticket.getOrderDetail().getTicketType().getEvent();
+            boolean isOrganizer = event.getOrganizer() != null && event.getOrganizer().getId().equals(user.getId());
+            if (!isOrganizer) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem vé này");
+            }
+        }
+
+        return MyTicketInfo.from(ticket);
+    }
+
+    /**
+     * Lấy ảnh QR code PNG theo mã QR của vé.
+     * GET /api/v1/tickets/{qrCode}/qr-image
+     * Chỉ chủ sở hữu vé hoặc organizer/admin của sự kiện đó mới được xem.
+     */
+    @GetMapping(value = "/tickets/{qrCode}/qr-image", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getQrImage(
+            @PathVariable String qrCode,
+            @AuthenticationPrincipal User user
+    ) {
+        Ticket ticket = ticketRepository.findByQrCode(qrCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "QR code không hợp lệ"));
+
+        boolean isAdmin = isAdmin(user);
+        boolean isOwner = ticket.getAttendee() != null && ticket.getAttendee().getId().equals(user.getId());
+        boolean isOrganizer = false;
+        if (!isAdmin && !isOwner) {
+            Event event = ticket.getOrderDetail().getTicketType().getEvent();
+            isOrganizer = event.getOrganizer() != null && event.getOrganizer().getId().equals(user.getId());
+        }
+
+        if (!isAdmin && !isOwner && !isOrganizer) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem QR code này");
+        }
+
+        // Vé đã bị vô hiệu hóa (đơn hàng bị hủy)
+        if (Boolean.FALSE.equals(ticket.getIsValid())) {
+            throw new ResponseStatusException(HttpStatus.GONE, "Vé đã bị hủy và không còn hiệu lực");
+        }
+
+        byte[] png = qrCodeService.generatePng(qrCode);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(png);
+    }
+
+    /**
+     * Check-in người tham dự bằng QR code string.
+     * POST /api/v1/tickets/{qrCode}/checkin
+     * Trả về { success: boolean, message } thay vì HTTP error để frontend có thể hiển thị thông báo rõ ràng.
+     * Admin bypass quyền kiểm tra organizer — có thể check-in cho bất kỳ sự kiện nào.
+     */
+    @PostMapping("/tickets/{qrCode}/checkin")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public CheckinResponse checkin(
+            @PathVariable String qrCode,
+            @AuthenticationPrincipal User user
+    ) {
+        Ticket ticket = ticketRepository.findByQrCode(qrCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "QR code không hợp lệ"));
+
+        // Trả success:false thay vì throw exception để frontend UI hiển thị message thân thiện
+        if (Boolean.FALSE.equals(ticket.getIsValid())) {
+            return new CheckinResponse(false, "Vé đã bị hủy, không thể check-in", null, ticket.getAttendeeName());
+        }
+
+        if (Boolean.TRUE.equals(ticket.getCheckinStatus())) {
+            return new CheckinResponse(false, "Vé đã được check-in trước đó", ticket.getCheckinTime(), ticket.getAttendeeName());
+        }
+
+        // Kiểm tra sự kiện còn trong thời gian check-in (chưa kết thúc)
+        Event eventForTime = ticket.getOrderDetail().getTicketType().getEvent();
+        if (eventForTime.getEventDate() != null) {
+            LocalTime cutoff = eventForTime.getEndTime() != null ? eventForTime.getEndTime() : LocalTime.MAX;
+            LocalDateTime eventEnd = LocalDateTime.of(eventForTime.getEventDate(), cutoff);
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            if (now.isAfter(eventEnd)) {
+                return new CheckinResponse(false, "Sự kiện đã kết thúc, không thể check-in", null, ticket.getAttendeeName());
+            }
+        }
+
+        boolean isAdmin = isAdmin(user);
+        if (!isAdmin) {
+            // Organizer chỉ được check-in vé của sự kiện mình tổ chức
+            if (eventForTime.getOrganizer() == null || !eventForTime.getOrganizer().getId().equals(user.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền check-in cho sự kiện này");
+            }
+        }
+
+        ticket.setCheckinStatus(true);
+        ticket.setCheckinTime(Instant.now());
+        ticketRepository.save(ticket);
+
+        return new CheckinResponse(true, "Check-in thành công", ticket.getCheckinTime(), ticket.getAttendeeName());
+    }
+
+    /**
+     * Organizer xem danh sách attendees của sự kiện.
+     * GET /api/v1/events/{eventId}/attendees
+     */
+    @GetMapping("/events/{eventId}/attendees")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public List<AttendeeInfo> getAttendees(
+            @PathVariable Integer eventId,
+            @AuthenticationPrincipal User user
+    ) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sự kiện không tồn tại"));
+
+        boolean isAdmin = isAdmin(user);
+        if (!isAdmin && (event.getOrganizer() == null || !event.getOrganizer().getId().equals(user.getId()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem thông tin này");
+        }
+
+        return ticketRepository.findByEventId(eventId).stream()
+                .map(AttendeeInfo::from)
+                .toList();
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private boolean isAdmin(User user) {
+        return user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    // ── inner records ─────────────────────────────────────────────────────────
+
+    record MyTicketInfo(
+            Integer ticketId,
+            String qrCode,
+            String attendeeName,
+            Boolean checkinStatus,
+            Instant checkinTime,
+            Boolean isValid,
+            Integer eventId,
+            String eventTitle,
+            LocalDate eventDate,
+            LocalTime startTime,
+            LocalTime endTime,
+            String eventLocation,
+            String eventThumbnail,
+            Double latitude,
+            Double longitude,
+            String ticketTypeName,
+            BigDecimal unitPrice,
+            Integer orderId,
+            String qrImageUrl
+    ) {
+        static MyTicketInfo from(Ticket t) {
+            Integer eventId = null;
+            String eventTitle = null;
+            LocalDate eventDate = null;
+            LocalTime startTime = null;
+            LocalTime endTime = null;
+            String eventLocation = null;
+            String eventThumbnail = null;
+            Double latitude = null;
+            Double longitude = null;
+            String ticketTypeName = null;
+            BigDecimal unitPrice = null;
+            Integer orderId = null;
+
+            OrderDetail od = t.getOrderDetail();
+            if (od != null) {
+                unitPrice = od.getPrice();
+                if (od.getOrder() != null) {
+                    orderId = od.getOrder().getOrderId();
+                }
+                TicketType tt = od.getTicketType();
+                if (tt != null) {
+                    ticketTypeName = tt.getName();
+                    Event event = tt.getEvent();
+                    if (event != null) {
+                        eventId = event.getEventId();
+                        eventTitle = event.getTitle();
+                        eventDate = event.getEventDate();
+                        startTime = event.getStartTime();
+                        endTime = event.getEndTime();
+                        eventLocation = event.getLocation();
+                        eventThumbnail = event.getThumbnail();
+                        latitude = event.getLatitude();
+                        longitude = event.getLongitude();
+                    }
+                }
+            }
+
+            return new MyTicketInfo(
+                    t.getTicketId(),
+                    t.getQrCode(),
+                    t.getAttendeeName(),
+                    t.getCheckinStatus(),
+                    t.getCheckinTime(),
+                    t.getIsValid(),
+                    eventId,
+                    eventTitle,
+                    eventDate,
+                    startTime,
+                    endTime,
+                    eventLocation,
+                    eventThumbnail,
+                    latitude,
+                    longitude,
+                    ticketTypeName,
+                    unitPrice,
+                    orderId,
+                    "/api/v1/tickets/" + t.getQrCode() + "/qr-image"
+            );
+        }
+    }
+
+    record AttendeeInfo(
+            Integer ticketId,
+            String attendeeName,
+            String qrCode,
+            Boolean checkinStatus,
+            Instant checkinTime,
+            Boolean isValid,
+            String ticketTypeName
+    ) {
+        static AttendeeInfo from(Ticket t) {
+            return new AttendeeInfo(
+                    t.getTicketId(),
+                    t.getAttendeeName(),
+                    t.getQrCode(),
+                    t.getCheckinStatus(),
+                    t.getCheckinTime(),
+                    t.getIsValid(),
+                    t.getOrderDetail() != null ? t.getOrderDetail().getTicketType().getName() : null
+            );
+        }
+    }
+
+    record CheckinResponse(Boolean success, String message, Instant checkinTime, String attendeeName) {}
+}

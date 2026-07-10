@@ -1,0 +1,199 @@
+package com.example.event_management_server.controller;
+
+import com.example.event_management_server.dto.*;
+import com.example.event_management_server.model.Commission;
+import com.example.event_management_server.model.Role;
+import com.example.event_management_server.model.User;
+import com.example.event_management_server.service.AdminService;
+import com.example.event_management_server.service.NotificationService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * REST Controller quản lý Admin.
+ *
+ * Tất cả endpoints yêu cầu role ADMIN.
+ *   - GET/PATCH /admin/events   → Duyệt sự kiện
+ *   - CRUD      /admin/organizers → Quản lý Organizer
+ */
+@RestController
+@RequestMapping("/api/v1/admin")
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminController {
+
+    private final AdminService adminService;
+    private final NotificationService notificationService;
+
+    public AdminController(AdminService adminService, NotificationService notificationService) {
+        this.adminService = adminService;
+        this.notificationService = notificationService;
+    }
+
+    // EVENT APPROVAL
+
+    /**
+     * Lấy danh sách sự kiện (có thể lọc theo approvalStatus).
+     * GET /api/v1/admin/events?approvalStatus=PENDING&page=0&size=10
+     */
+    @GetMapping("/events")
+    public Page<AdminEventSummaryResponse> getEvents(
+            @RequestParam(required = false) String approvalStatus,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return adminService.getEvents(approvalStatus, page, size);
+    }
+
+    /**
+     * Duyệt hoặc từ chối sự kiện.
+     * PATCH /api/v1/admin/events/{eventId}/approval
+     * Body: { "action": "APPROVE" } hoặc { "action": "REJECT", "reason": "..." }
+     */
+    @PatchMapping("/events/{eventId}/approval")
+    public AdminEventSummaryResponse reviewEvent(
+            @PathVariable Integer eventId,
+            @Valid @RequestBody ApprovalRequest request,
+            @AuthenticationPrincipal User admin) {
+
+        return adminService.reviewEvent(eventId, request, admin);
+    }
+
+    // ORGANIZER MANAGEMENT
+
+    /**
+     * Danh sách Organizer, hỗ trợ tìm kiếm.
+     * GET /api/v1/admin/organizers?search=keyword&page=0&size=10
+     */
+    @GetMapping("/organizers")
+    public Page<OrganizerResponse> getOrganizers(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return adminService.getOrganizers(search, page, size);
+    }
+
+    /**
+     * Chi tiết một Organizer.
+     * GET /api/v1/admin/organizers/{organizerId}
+     */
+    @GetMapping("/organizers/{organizerId}")
+    public OrganizerResponse getOrganizer(@PathVariable UUID organizerId) {
+        return adminService.getOrganizerById(organizerId);
+    }
+
+    /**
+     * Tạo Organizer mới.
+     * POST /api/v1/admin/organizers
+     */
+    @PostMapping("/organizers")
+    @ResponseStatus(HttpStatus.CREATED)
+    public OrganizerResponse createOrganizer(@Valid @RequestBody OrganizerRequest request) {
+        return adminService.createOrganizer(request);
+    }
+
+    /**
+     * Cập nhật Organizer.
+     * PUT /api/v1/admin/organizers/{organizerId}
+     */
+    @PutMapping("/organizers/{organizerId}")
+    public OrganizerResponse updateOrganizer(
+            @PathVariable UUID organizerId,
+            @Valid @RequestBody OrganizerRequest request) {
+
+        return adminService.updateOrganizer(organizerId, request);
+    }
+
+    /**
+     * Xóa Organizer.
+     * DELETE /api/v1/admin/organizers/{organizerId}
+     */
+    @DeleteMapping("/organizers/{organizerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOrganizer(@PathVariable UUID organizerId) {
+        adminService.deleteOrganizer(organizerId);
+    }
+
+    /**
+     * Thống kê tổng quan hệ thống.
+     * GET /api/v1/admin/stats
+     */
+    @GetMapping("/stats")
+    public AdminService.DashboardStats getStats() {
+        return adminService.getDashboardStats();
+    }
+
+    // USER BLOCK / UNBLOCK
+
+    /**
+     * Khoá hoặc mở khoá một user.
+     * PATCH /api/v1/admin/users/{userId}/status?active=false
+     */
+    @PatchMapping("/users/{userId}/status")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setUserStatus(
+            @PathVariable UUID userId,
+            @RequestParam boolean active) {
+        adminService.setUserActive(userId, active);
+    }
+
+    // COMMISSION MANAGEMENT
+
+    /** GET /api/v1/admin/commissions */
+    @GetMapping("/commissions")
+    public List<Commission> getCommissions() {
+        return adminService.getAllCommissions();
+    }
+
+    /** GET /api/v1/admin/commissions/active */
+    @GetMapping("/commissions/active")
+    public Commission getActiveCommission() {
+        return adminService.getActiveCommission();
+    }
+
+    /** POST /api/v1/admin/commissions
+     *  Body: { "percent": 5.00, "effectiveFrom": "2025-07-01T00:00:00Z" }
+     */
+    @PostMapping("/commissions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Commission createCommission(@RequestBody CommissionRequest request) {
+        return adminService.createCommission(request.percent(), request.effectiveFrom());
+    }
+
+    /** PATCH /api/v1/admin/commissions/{commissionId} */
+    @PatchMapping("/commissions/{commissionId}")
+    public Commission updateCommission(
+            @PathVariable Integer commissionId,
+            @RequestBody CommissionRequest request) {
+        return adminService.updateCommission(commissionId, request.percent(), request.effectiveFrom(), request.isActive());
+    }
+
+    // NOTIFICATIONS
+
+    /**
+     * Gửi thông báo broadcast đến toàn bộ user hoặc theo role.
+     * POST /api/v1/admin/notifications/broadcast
+     * Body: { "title": "...", "message": "...", "targetRole": "ALL" | "ATTENDEE" | "ORGANIZER" }
+     */
+    @PostMapping("/notifications/broadcast")
+    public Map<String, Object> broadcastNotification(@Valid @RequestBody BroadcastRequest request) {
+        Role targetRole = "ALL".equals(request.targetRole()) ? null : Role.valueOf(request.targetRole());
+        int count = notificationService.broadcastByRole(request.title(), request.message(), "SYSTEM_BROADCAST", targetRole);
+        return Map.of("sent", count);
+    }
+
+    record BroadcastRequest(
+            @NotBlank String title,
+            @NotBlank String message,
+            String targetRole   // "ALL" | "ATTENDEE" | "ORGANIZER"
+    ) {}
+}
