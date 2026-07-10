@@ -30,7 +30,7 @@ public class PaymentTimeoutTask {
         List<Order> stale = orderRepository.findStaleAwaitingGateway(cutoff);
         for (Order o : stale) {
             try {
-                reservationService.markOrderFailed(o);
+                reservationService.markOrderFailed(o.getGatewayOrderCode());
             } catch (Exception e) {
                 System.err.println("[PaymentTimeout] Lỗi khi expire order " + o.getOrderId() + ": " + e.getMessage());
             }
