@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://localhost:8081/api/v1'
+// Production: đặt VITE_API_URL trong env của Vercel (ví dụ https://xxx.onrender.com/api/v1)
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1'
 
 // Axios instance dùng chung cho toàn bộ app — mọi API call đều đi qua đây
 const client = axios.create({
