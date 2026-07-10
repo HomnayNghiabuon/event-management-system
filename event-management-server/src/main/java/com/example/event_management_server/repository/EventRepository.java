@@ -23,10 +23,9 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             SELECT e FROM Event e
             WHERE e.status = 'PUBLISHED'
               AND (:categoryId IS NULL OR e.category.categoryId = :categoryId)
-              AND (:loc1 IS NULL
-                   OR (LOWER(e.location) LIKE LOWER(CONCAT('%', :loc1, '%'))
-                       AND (:loc2 IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :loc2, '%')))
-                       AND (:loc3 IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :loc3, '%')))))
+              AND (:loc1 IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :loc1, '%')))
+              AND (:loc2 IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :loc2, '%')))
+              AND (:loc3 IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :loc3, '%')))
               AND (:date    IS NULL OR e.eventDate = :date)
               AND (:keyword IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
                                    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%')))

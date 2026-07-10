@@ -55,6 +55,7 @@ Bảng và dữ liệu mẫu sẽ được tạo tự động ở lần khởi �
 
 | Biến | Giá trị |
 |------|--------|
+| `JAVA_TOOL_OPTIONS` | `-Xmx300m -Xss512k -XX:+UseSerialGC` — bắt buộc với gói Free 512MB RAM, không có sẽ OutOfMemoryError lúc khởi động |
 | `DB_URL` | JDBC URL ở Bước 1 |
 | `DB_DRIVER` | `com.mysql.cj.jdbc.Driver` |
 | `DB_USERNAME` | `MYSQLUSER` từ Railway (thường là `root`) |
