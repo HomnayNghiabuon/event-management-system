@@ -2,6 +2,26 @@
 
 Ứng dụng web full-stack cho phép tổ chức sự kiện, bán vé trực tuyến và check-in người tham dự bằng mã QR.
 
+## 🌐 Demo trực tuyến
+
+| Thành phần | Địa chỉ |
+|---|---|
+| **Website chính thức** | https://event-management-system-nghia.vercel.app |
+| API (backend) | https://event-management-system-fj77.onrender.com/api/v1 |
+| Swagger UI | https://event-management-system-fj77.onrender.com/swagger-ui.html |
+
+**Tài khoản demo** (mật khẩu: `123456`):
+
+| Vai trò | Email |
+|---|---|
+| Admin | admin@eventms.com |
+| Organizer | organizer@eventms.com |
+| Attendee | attendee@eventms.com |
+
+> ⏳ Backend chạy gói Free của Render — nếu không có ai truy cập trong 15 phút, server sẽ "ngủ" và lần mở đầu tiên mất ~50 giây khởi động lại. Cứ đợi một chút rồi tải lại trang.
+
+Hạ tầng: Frontend trên **Vercel** · Backend trên **Render** (Docker) · MySQL trên **Railway**. Hướng dẫn deploy chi tiết: [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Tính năng chính
 
 **Người tham dự (Attendee)**
