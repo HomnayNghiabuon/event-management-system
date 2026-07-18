@@ -1,5 +1,6 @@
 package com.example.event_management_server.service;
 
+import com.example.event_management_server.config.RedisCacheConfig;
 import com.example.event_management_server.dto.*;
 import com.example.event_management_server.model.Commission;
 import com.example.event_management_server.model.Event;
@@ -10,6 +11,7 @@ import com.example.event_management_server.repository.EventRepository;
 import com.example.event_management_server.repository.OrderCommissionRepository;
 import com.example.event_management_server.repository.OrderRepository;
 import com.example.event_management_server.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +86,7 @@ public class AdminService {
      * PATCH /admin/events/{eventId}/approval
      * action: APPROVE | REJECT
      */
+    @CacheEvict(value = RedisCacheConfig.CACHE_EVENT_DETAIL, key = "#eventId")
     public AdminEventSummaryResponse reviewEvent(Integer eventId, ApprovalRequest request, User admin) {
         String action = request.action();
         if (!"APPROVE".equalsIgnoreCase(action) && !"REJECT".equalsIgnoreCase(action)) {

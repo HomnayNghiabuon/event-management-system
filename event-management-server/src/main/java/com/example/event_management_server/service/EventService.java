@@ -1,5 +1,6 @@
 package com.example.event_management_server.service;
 
+import com.example.event_management_server.config.RedisCacheConfig;
 import com.example.event_management_server.dto.*;
 import com.example.event_management_server.model.Category;
 import com.example.event_management_server.model.Event;
@@ -10,6 +11,8 @@ import com.example.event_management_server.repository.EventRepository;
 import com.example.event_management_server.repository.OrderDetailRepository;
 import com.example.event_management_server.repository.TicketReservationRepository;
 import com.example.event_management_server.repository.TicketTypeRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -90,8 +93,12 @@ public class EventService {
      * Lấy chi tiết sự kiện theo ID.
      * - Public: chỉ thấy PUBLISHED
      * - Organizer/Admin: truyền requestingUser để xem cả DRAFT
+     * Chỉ cache request public (requestingUser == null) — response của organizer/admin
+     * phụ thuộc quyền từng user nên không cache.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = RedisCacheConfig.CACHE_EVENT_DETAIL, key = "#eventId",
+            condition = "#requestingUser == null")
     public EventResponse getEventById(Integer eventId, User requestingUser) {
         Event event = findEventOrThrow(eventId);
 
@@ -151,6 +158,7 @@ public class EventService {
      * Xóa toàn bộ TicketType cũ và tạo lại từ request (không update từng cái).
      * Nếu event bị REJECTED → tự động reset approvalStatus về PENDING để admin duyệt lại.
      */
+    @CacheEvict(value = RedisCacheConfig.CACHE_EVENT_DETAIL, key = "#eventId")
     public EventResponse updateEvent(Integer eventId, EventRequest request, User organizer) {
         validateEventTimes(request);
         Event event = findEventOrThrow(eventId);
@@ -195,6 +203,7 @@ public class EventService {
      * Publish / Unpublish sự kiện (ORGANIZER – chỉ sự kiện của mình).
      * Chỉ sự kiện có approvalStatus = APPROVED mới được publish.
      */
+    @CacheEvict(value = RedisCacheConfig.CACHE_EVENT_DETAIL, key = "#eventId")
     public EventResponse publishEvent(Integer eventId, Boolean publish, User organizer) {
         Event event = findEventOrThrow(eventId);
         checkOwnership(event, organizer.getId());
@@ -215,6 +224,7 @@ public class EventService {
      * Xoá sự kiện (ORGANIZER – chỉ sự kiện của mình; ADMIN – bất kỳ).
      * Không cho phép xóa nếu đã có reservation hoặc order để tránh mất dữ liệu lịch sử.
      */
+    @CacheEvict(value = RedisCacheConfig.CACHE_EVENT_DETAIL, key = "#eventId")
     public void deleteEvent(Integer eventId, User user) {
         Event event = findEventOrThrow(eventId);
 
