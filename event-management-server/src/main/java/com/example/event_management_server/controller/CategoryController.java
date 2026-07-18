@@ -1,11 +1,14 @@
 package com.example.event_management_server.controller;
 
+import com.example.event_management_server.config.RedisCacheConfig;
 import com.example.event_management_server.model.Category;
 import com.example.event_management_server.repository.CategoryRepository;
 import com.example.event_management_server.repository.EventRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,8 +30,9 @@ public class CategoryController {
         this.eventRepository = eventRepository;
     }
 
-    /** GET /api/v1/categories — public, không cần xác thực. */
+    /** GET /api/v1/categories — public, không cần xác thực. Cache Redis TTL 1h. */
     @GetMapping
+    @Cacheable(RedisCacheConfig.CACHE_CATEGORIES)
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(c -> new CategoryResponse(c.getCategoryId(), c.getName(), c.getDescription()))
@@ -38,6 +42,7 @@ public class CategoryController {
     /** POST /api/v1/categories — chỉ ADMIN. Kiểm tra trùng tên (case-insensitive). */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = RedisCacheConfig.CACHE_CATEGORIES, allEntries = true)
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest req) {
         boolean exists = categoryRepository.findAll().stream()
                 .anyMatch(c -> c.getName().equalsIgnoreCase(req.name()));
@@ -54,6 +59,7 @@ public class CategoryController {
     /** PUT /api/v1/categories/{id} — chỉ ADMIN. Không được trùng tên với danh mục khác. */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = RedisCacheConfig.CACHE_CATEGORIES, allEntries = true)
     public CategoryResponse updateCategory(@PathVariable Integer id, @Valid @RequestBody CategoryRequest req) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
@@ -75,6 +81,7 @@ public class CategoryController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = RedisCacheConfig.CACHE_CATEGORIES, allEntries = true)
     public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable Integer id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
